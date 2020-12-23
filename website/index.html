@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+<head>
+      <link rel="stylesheet" href="styles.css">
+      <meta charset="UTF-8">
+      <meta name="keywords" content="CLRec">
+      <meta name="author" content="Anh Thai">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+ 
+<div class="header">
+  <h1>Does Continual Learning = Catastrophic Forgetting?</h1>
+  <p class="authors">
+        <a href="https://anhthai1997.wordpress.com/">Anh Thai</a>,
+        <a href="https://sstojanov.github.io/">Stefan Stojanov</a>,
+        <a href="mailto:isaacrehg@gmail.com">Isaac Rehg</a>,
+        <a href="https://rehg.org/">James M. Rehg</a>
+  </p>
+  <p class="institution">
+        Georgia Institute of Technology
+  </p>
+<!--   <span class="footnote">
+    * equal contribution
+  </p> -->
+</div>     
+
+<div class="links">
+
+    <div class="gallery">
+      <a target="_blank" href="https://github.com/devlearning-gt/3DShapeGen">
+	<img src="img/code_img.png" alt="code">
+      </a>
+      <div class="desc">Code</div>
+    </div>
+    
+    <div class="gallery">
+      <a target="_blank" href="">
+	<img src="img/paper_img.png" alt="arxiv link">
+      </a>
+      <div class="desc">Paper <a href="">[BibTex]</a></div>
+    </div>
+    <!-- /3DShapeGen/bibtex/3DShapeGen.bib -->
+
+</div>
+
+<div class="content">
+
+<!-- <h1> Abstract </h1>
+<p>
+A key challenge in single image 3D shape reconstruction is to ensure that deep models designed for single-view shape prediction can generalize to shapes which were not part of the training set. We find that such generalization to unseen categories of objects is a function of both architecture design and object pose representation during training. This paper introduces SDFNet, a novel shape prediction architecture and a training approach which supports effective generalization. We provide an extensive investigation of the factors that influence generalization accuracy and its measurement, ranging from the consistent use of 3D shape metrics to the choice of rendering parameters. We show that SDFNet provides state-of-the-art performance on seen and unseen shapes relative to existing baseline methods. We provide the first large-scale experimental evaluation of generalization performance on the complete ShapeNetCore.v2 dataset. 
+</p> -->
+
+
+
+    <p>
+    We demonstrate that, unlike classification task, reconstruction tasks do not suffer from catastrophic forgetting when learning continually. The reconstruction algorithm used is standard SGD run on each learning exposure. We <i>do not need to utilize additional losses, external memory, or other methodsto achieve good continual learning performance</i>. Average accuracy on seen classes is shown at each learning exposure in the following plots.   
+    </p>
+    <div class="gifs">
+      <div class="container">
+        <div class="gallery">
+            
+          <img class="gif" src="img/shape_single.png" >
+          <div class="desc">3D Shape Reconstruction</div>
+        </div>
+      </div>
+      <div class="container">
+        <div class="gallery">
+          <img class="gif" src="img/dn_single.png" >
+          <div class="desc">Surface Depth and Normals Prediction</div>
+        </div>
+        
+      </div>
+    </div>
+
+    <div class="gifs">
+      <div class="container">
+        <div class="gallery">
+            
+          <img class="gif" src="img/sil_single.png" >
+          <div class="desc">Silhouette Prediction</div>
+        </div>
+      </div>
+      <div class="container">
+        <div class="gallery">
+          <img class="gif" src="img/autoenc_single.png" >
+          <div class="desc">Image Autoencoder</div>
+        </div>
+        
+      </div>
+    </div>
+    <div class="desc">Reconstruction tasks do not suffer from catastrophic forgetting in single exposure case.</div>
+    <br>
+    <center><img src="img/shape_rep.png" ></center>
+    <div class="desc">Repeated exposures lead asymptotically to batch performance.</div>
+    
+
+
+<!-- <br><br> -->
+<h1> Representation Positive Transfer in Reconstruction Tasks </h1>
+<p>We demonstrate that, unlike classification task, 3D shape reconstruction task is able to propagate the learned feature representation forward between learning exposures (referred to as positive forward transfer), which is presumably one of the keys to the success of reconstruction tasks. In the following experiment, we utilize GDumb <a href="#GDumb">[1]</a> and a variant of GDumb, GDumb++, which differs from GDumb in that the model trained at each exposure is initialized with the weights learned in the previous exposure (ie. not starting from scratch). Since both GDumb and GDumb++ are trained on the same amount of input data, any performance gap is attributable to the value of propagating the learned representation.
+</p>
+<center><img src="img/shape_gdumb.png" ></center>
+<div class="desc">For 3D reconstruction task, GDumb++ shows a significant advantage over GDumb.</div>
+
+</div>
+
+
+<div class="content">
+
+<h1> Proxy Task for Continual Classification</h1>
+<p>
+  We utilize the learned feature representation extracted from a continual 3D shape reconstruction and apply nearest-class-mean (NCM) to perform classification. We maintain an exemplar set of 20 images/class with
+  class labels randomly chosen from the training set at each learning exposure. The performance of this proxy task is on par with the SOTA classification algorithm with the same exemplar set size.
+  </p>
+    <div class="gifs">
+      <div class="container">
+        <div class="gallery">
+            
+          <img class="gif" src="img/proxy_shapenet.png" >
+          <div class="desc">Classification performance on ShapeNet13</div>
+        </div>
+      </div>
+      <div class="container">
+        <div class="gallery">
+          <img class="gif" src="img/proxy_modelnet.png" >
+          <div class="desc">Classification performance on ModelNet40</div>
+        </div>
+        
+      </div>
+    </div>
+    <div class="desc">Performance of the shape proxy task and classification methods.</div>
+
+<h1> YASS&mdash;Simple Baseline for Classification </h1>
+<!-- <center><img src="img/abc_shapenet_img.png" ></center> -->
+<p>
+We introduce YASS, a class incremental learning method that is a simple extension of a batch learner with standard SGD and data balancing technique. We demonstrate that this simple design choice surprisingly achieves SOTA performance.
+</p>
+<div class="gifs">
+      <div class="container">
+        <div class="gallery">
+            
+          <img class="gif" src="img/yass_single.png" >
+          <div class="desc">Single exposure learning on CIFAR-100</div>
+        </div>
+      </div>
+      <div class="container">
+        <div class="gallery">
+          <img class="gif" src="img/yass_rep.png" >
+          <div class="desc">Repeated exposures learning on CIFAR-100</div>
+        </div>
+        
+      </div>
+    </div>
+<!-- <div class="desc"> Sample images of our renders of the four most common ShapeNet categories and of objects from ABC. It is evident that the two datasets have different shape properties.</div> -->
+
+
+
+<h1> DyRT&mdash;A Novel Tool To Quantify Forgetting </h1>
+<!-- <center><img src="img/abc_shapenet_img.png" ></center> -->
+<p>
+We introduce DyRT (Dynamic Representation Tracking), a novel tool to quantify the dynamics of forgetting in the visual feature representation during
+continual learning. With DyRT, we demonstrate that the FC layer is more prone to forgetting than the feature extractor, confirming the findings from prior works. 
+</p>
+<div class="gifs">
+      <div class="container">
+        <div class="gallery">
+            
+          <img class="gif" src="img/dyrt1.png" >
+          <div class="desc">Accuracy of the feature representation (VF) and Model accuracy (using readouts from the FC layer)</div>
+        </div>
+      </div>
+      <div class="container">
+        <div class="gallery">
+          <img class="gif" src="img/dyrt2.png" >
+          <div class="desc">Number of times a particular class or VF is
+          forgotten during training plotted by the threshold used to aggregate that data point</div>
+        </div>
+        
+      </div>
+    </div>
+<!--     <div class="desc">Reconstruction tasks do not suffer from catastrophic forgetting in single exposure case.</div> -->
+<!-- <div class="desc"> Sample images of our renders of the four most common ShapeNet categories and of objects from ABC. It is evident that the two datasets have different shape properties.</div> -->
+
+
+<h1> Citation  </h1>
+<p>Bibliography information of this work:</p>
+<p>
+Thai, A., Stojanov, S., Rehg, I., Rehg, J. (2020). Does Continual Learning = Catastrophic Forgetting? 
+<!-- <cite>arXiv preprint:2006.07752.</cite> -->
+</p>
+
+<h1> Reference  </h1>
+<ol>
+    <li><a name="GDumb">Ameya Prabhu, Philip Torr, and Puneet Dokania.  Gdumb: A simple approach that questions our progress in continuallearning. In <cite>ECCV</cite>, 2020.</a></li>
+  </ol> 
+
+</div>     
