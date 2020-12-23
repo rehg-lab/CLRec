@@ -119,7 +119,6 @@ def main():
             test_dataset.clear()
             test_dataset.get_current_data_class(seen_classes[s])
 
-
             with tqdm(total=int(len(test_loader)), ascii=True) as pbar:
                 with torch.no_grad():
                     for mbatch in test_loader:
@@ -130,7 +129,6 @@ def main():
                         points_input = Variable(points_input).cuda()
                         values = Variable(values).cuda()
                         labels = Variable(labels).cuda()
-
 
                         optimizer.zero_grad()
 
