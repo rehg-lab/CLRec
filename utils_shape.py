@@ -83,7 +83,6 @@ def compute_iou(occ1, occ2):
     # Compute IOU
     area_union = (occ1 | occ2).astype(np.float32).sum(axis=-1)
     if (area_union == 0).any():
-        # import pdb; pdb.set_trace()
         return 0.
 
     area_intersect = (occ1 & occ2).astype(np.float32).sum(axis=-1)
@@ -266,7 +265,7 @@ def extract_mesh(value_grid, feats, box_size, threshold, constant_values=-1e6):
     return mesh
 
 def eval_mesh(mesh, pointcloud_gt, normals_gt, points, val_gt, \
-                num_fscore_thres=6, n_points=300000, algo='occnet', \
+                num_fscore_thres=6, n_points=300000, shape_rec='occ', \
                 sdf_val=None, iso=0.003):
 
     if mesh is not None and type(mesh)==trimesh.base.Trimesh and len(mesh.vertices) != 0 and len(mesh.faces) != 0:
@@ -274,7 +273,7 @@ def eval_mesh(mesh, pointcloud_gt, normals_gt, points, val_gt, \
         pointcloud = pointcloud.astype(np.float32)
         normals = mesh.face_normals[idx]
     else:
-        if algo == 'occnet':
+        if shape_rec == 'occ':
             return {'iou': 0., 'cd': 2*np.sqrt(3), 'completeness': np.sqrt(3),\
                     'accuracy': np.sqrt(3), 'normals_completeness': -1,\
                     'normals_accuracy': -1, 'normals': -1, \
@@ -332,7 +331,7 @@ def eval_mesh(mesh, pointcloud_gt, normals_gt, points, val_gt, \
     normals = 0.5*(normals_completeness+normals_accuracy)
 
     # Compute IoU
-    if algo == 'occnet':
+    if shape_rec == 'occ':
         occ_mesh = check_mesh_contains(mesh, points.cpu().numpy().squeeze(0))
         iou = compute_iou(occ_mesh, val_gt.cpu().numpy().squeeze(0))
     else:
@@ -347,83 +346,6 @@ def eval_mesh(mesh, pointcloud_gt, normals_gt, points, val_gt, \
         sdf_iou, _, _ = compute_acc(sdf_val.cpu().numpy(),\
                         val_gt.cpu().numpy()) 
         iou = np.array([iou, sdf_iou])
-
-    return {'iou': iou, 'cd': cd, 'completeness': completeness,\
-                'accuracy': accuracy, \
-                'normals_completeness': normals_completeness,\
-                'normals_accuracy': normals_accuracy, 'normals': normals, \
-                'fscore': fscore_array, 'precision': precision_array,\
-                'recall': recall_array}
-
-def eval_mesh_genre(mesh, pointcloud_gt, normals_gt, points, val_gt, \
-                num_fscore_thres=6, n_points=300000, algo='occnet', \
-                sdf_val=None, iso=0.003):
-    if mesh is not None and type(mesh)==trimesh.base.Trimesh and len(mesh.vertices) != 0 and len(mesh.faces) != 0:
-        pointcloud, idx = mesh.sample(n_points, return_index=True)
-        pointcloud = pointcloud.astype(np.float32)
-        normals = mesh.face_normals[idx]
-    else:
-        return {'iou': 0., 'cd': 2*np.sqrt(3), 'completeness': np.sqrt(3),\
-                    'accuracy': np.sqrt(3), 'normals_completeness': -1,\
-                    'normals_accuracy': -1, 'normals': -1, \
-                    'fscore': np.zeros(6, dtype=np.float32), \
-                    'precision': np.zeros(6, dtype=np.float32), \
-                    'recall': np.zeros(6, dtype=np.float32)}
-    # Eval pointcloud
-    pointcloud = np.asarray(pointcloud)
-    pointcloud_gt = np.asarray(pointcloud_gt)
-    normals = np.asarray(normals)
-    normals_gt = np.asarray(normals_gt)
-
-    # Completeness: how far are the points of the target point cloud
-    # from thre predicted point cloud
-    completeness, normals_completeness = distance_p2p(
-            pointcloud_gt, normals_gt, pointcloud, normals)
-
-    # Accuracy: how far are th points of the predicted pointcloud
-    # from the target pointcloud
-    accuracy, normals_accuracy = distance_p2p(
-        pointcloud, normals, pointcloud_gt, normals_gt
-    )
-
-    # Get fscore
-    fscore_array, precision_array, recall_array = [], [], []
-    for i, thres in enumerate([0.5, 1, 2, 5, 10, 20]):
-        fscore, precision, recall = calculate_fscore(\
-            accuracy, completeness, thres/100.)
-        fscore_array.append(fscore)
-        precision_array.append(precision)
-        recall_array.append(recall)
-    fscore_array = np.array(fscore_array, dtype=np.float32)
-    precision_array = np.array(precision_array, dtype=np.float32)
-    recall_array = np.array(recall_array, dtype=np.float32)
-
-    # import pdb; pdb.set_trace()
-
-    accuracy = accuracy.mean()
-    normals_accuracy = normals_accuracy.mean()
-
-    completeness = completeness.mean()
-    normals_completeness = normals_completeness.mean()
-
-    cd = completeness + accuracy
-    normals = 0.5*(normals_completeness+normals_accuracy)
-
-    # Compute IoU
-    if algo == 'occnet':
-        occ_mesh = check_mesh_contains(mesh, points)
-        iou = compute_iou(occ_mesh, val_gt)
-    else:
-        # import pdb; pdb.set_trace()
-
-        occ_mesh = check_mesh_contains(mesh, points)
-        val_gt_np = val_gt
-        occ_gt = val_gt_np <= iso
-        iou = compute_iou(occ_mesh, occ_gt) 
-
-        # sdf iou
-        # sdf_iou, _, _ = compute_acc(sdf_val,val_gt) 
-        iou = np.array([iou, 0.])
 
     return {'iou': iou, 'cd': cd, 'completeness': completeness,\
                 'accuracy': accuracy, \
@@ -488,11 +410,6 @@ def generate_mesh_sdf(img, model, obj_path, sdf_path, iso=0.003, box_size=1.01, 
 
     pred_sdf = model(all_pts, img)
     pred_sdf = pred_sdf.data.cpu().numpy().reshape(-1)
-
-    # import pdb; pdb.set_trace()
-
-
-
     f_sdf_bin = open(sdf_path, 'wb')
     f_sdf_bin.write(struct.pack('i', -(resolution)))  # write an int
     f_sdf_bin.write(struct.pack('i', (resolution)))  # write an int
@@ -589,108 +506,6 @@ def clean_mesh(src_mesh, tar_mesh, dist_thresh=0.2, num_thresh=0.3):
         collection = new_collection  
     tar_mesh_obj = pymesh.merge_meshes(collection)
     pymesh.save_mesh_raw(tar_mesh, tar_mesh_obj.vertices, tar_mesh_obj.faces)
-
-
-def generate_mesh_mise_sdf(img, points, model, threshold=0.003, box_size=1.7, \
-            resolution=64, upsampling_steps=2):
-    '''
-    Generates mesh for occupancy representations using MISE algorithm
-    '''
-    model.eval()
-
-    resolution0 = resolution // (2**upsampling_steps)
-
-    total_points = (resolution+1)**3
-    split_size = int(np.ceil(total_points*1.0/128**3))
-    mesh_extractor = MISE(
-        resolution0, upsampling_steps, threshold)
-    p = mesh_extractor.query()
-    with torch.no_grad():
-        feats = model.encoder(img)
-    while p.shape[0] != 0:
-
-        pq = p / mesh_extractor.resolution
-
-        pq = box_size * (pq - 0.5)
-        occ_pred = []
-        with torch.no_grad():
-            if pq.shape[0] > 128**3:
-
-                pq = np.array_split(pq, split_size)
-
-                for ind in range(split_size):
-
-                    occ_pred_split = model.decoder(torch.FloatTensor(pq[ind])\
-                            .cuda().unsqueeze(0), feats)
-                    occ_pred.append(occ_pred_split.cpu().numpy().reshape(-1))
-                occ_pred = np.concatenate(np.asarray(occ_pred),axis=0)
-                values = occ_pred.reshape(-1)
-
-            else:
-                pq = torch.FloatTensor(pq).cuda().unsqueeze(0)
-
-                occ_pred = model.decoder(pq, feats)
-                values = occ_pred.squeeze(0).detach().cpu().numpy()
-        values = values.astype(np.float64)
-        mesh_extractor.update(p, values)
-
-        p = mesh_extractor.query()
-    value_grid = mesh_extractor.to_dense()
-    mesh = extract_mesh(value_grid, feats, box_size, threshold, constant_values=1e6)
-    return mesh
-
-def writeimg(mask, pred, gt, path, cl_count=-1):
-    # import pdb; pdb.set_trace()
-    pred = pred.squeeze(0).cpu().numpy()
-    gt = gt.squeeze(0).cpu().numpy()
-
-    pred = pred.transpose(1,2,0)*255.
-    gt = gt.transpose(1,2,0)*255.
-    if len(mask) != 0:
-        mask = mask.transpose(1,2,0)
-
-        pred[mask == False] = 0. # Set background to black
-
-    if pred.shape[-1] == 1:
-        pred = np.squeeze(pred, 2)
-        gt = np.squeeze(gt, 2)
-
-
-    pred = Image.fromarray(np.uint8(pred))
-    gt = Image.fromarray(np.uint8(gt))
-
-    if cl_count != -1:
-        pred.save(os.path.join(path, '%s-pred.png'%(str(cl_count))), "PNG")
-        gt.save(os.path.join(path, '%s-gt.png'%(str(cl_count))), "PNG")
-    else:
-        pred.save(os.path.join(path, 'pred.png'), "PNG")
-        gt.save(os.path.join(path, 'gt.png'), "PNG")
-
-def compute_iou_seg(pred, gt):
-    ''' Computes the Intersection over Union (IoU) value for two sets of
-    occupancy values.
-
-    Args:
-        occ1 (tensor): first set of occupancy values
-        occ2 (tensor): second set of occupancy values
-    '''
-    occ1 = pred.cpu().numpy()
-    occ2 = gt.cpu().numpy()
-
-    occ1 = (occ1 >= 0.5).reshape(len(occ1),-1)
-    occ2 = (occ2 >= 0.5).reshape(len(occ2),-1)
-
-    # Compute IOU
-    area_union = (occ1 | occ2).astype(np.float32).sum(axis=-1)
-    if (area_union == 0).any():
-        # import pdb; pdb.set_trace()
-        return 0.
-
-    area_intersect = (occ1 & occ2).astype(np.float32).sum(axis=-1)
-
-    iou = (area_intersect / area_union)
-
-    return iou
 
 
 
