@@ -1,6 +1,5 @@
 import numpy as np
 import os
-import config
 from datetime import datetime
 import copy
 import torch
@@ -17,16 +16,13 @@ import pymesh
 from PIL import Image
 
 
-
-
-def writelogfile(log_dir):
+def writelogfile(config, log_dir):
     log_file_name = os.path.join(log_dir, 'log.txt')
     with open(log_file_name, "a+") as log_file:
-        log_string = get_log_string()
+        log_string = get_log_string(config)
         log_file.write(log_string)
 
-
-def get_log_string():
+def get_log_string(config):
     now = str(datetime.now().strftime("%H:%M %d-%m-%Y"))
     log_string = ""
     log_string += " -------- Hyperparameters and settings -------- \n"
@@ -52,9 +48,6 @@ def get_log_string():
         config.path['src_pt_path'])
     log_string += " ------------------------------------------------------ \n"
     return log_string
-
-
-
 
 def compute_iou(occ1, occ2):
     ''' Computes the Intersection over Union (IoU) value for two sets of
@@ -131,18 +124,6 @@ def get_sdf_h5(sdf_h5_file):
         h5_f.close()
     return ori_pt, ori_sdf_val, sample_pt, sample_sdf_val, norm_params, sdf_params
 
-def get_sdf_h5_occ(occ_h5_file):
-    h5_f = h5py.File(occ_h5_file, 'r')
-    try:
-        if 'occ' in h5_f.keys() and 'loc' in h5_f.keys():
-            occ = h5_f['occ'][:].astype(np.float32)
-            points = h5_f['loc'][:].astype(np.float32)
-        else:
-            raise Exception('no occ')
-    finally:
-        h5_f.close()
-    return points, occ
-
 def apply_rotate(input_points, rotate_dict):
     theta_azim = rotate_dict['azim']
     theta_elev = rotate_dict['elev']
@@ -190,31 +171,11 @@ def LpLoss(logits, sdf, p=1, thres=0.01, weight=4.):
     loss = torch.mean(loss)
     return loss
 
-def LpLoss_BCE(logits, sdf, p=1, thres=0.01, weight=4., iso=0.003):
-
-    sdf = Variable(sdf.data, requires_grad=False).cuda()
-    loss_sdf = torch.abs(logits-sdf).pow(p).cuda()
-    weight_mask = torch.ones(loss_sdf.shape).cuda()
-    weight_mask[torch.abs(sdf) < thres] =\
-             weight_mask[torch.abs(sdf) < thres]*weight 
-    loss_sdf = loss_sdf * weight_mask
-    loss_sdf = torch.sum(loss_sdf, dim=-1, keepdim=False)
-    loss_sdf = torch.mean(loss_sdf)
-    # import pdb; pdb.set_trace()
-
-    loss_BCE_func = nn.BCELoss(reduction='none')
-    sign = ((logits-iso)*(sdf-iso) <= 0).to(dtype=torch.float32).cuda()
-    sign_gt = (sdf <= iso).to(dtype=torch.float32).cuda()
-    loss_BCE = loss_BCE_func(sign, sign_gt)/27.631
-    loss_BCE = torch.sum(loss_BCE, dim=-1, keepdim=False)
-    loss_BCE = torch.mean(loss_BCE)
-    loss = loss_sdf + loss_BCE
-    return loss
-
-
 def generate_mesh(img, points, model, threshold=0.2, box_size=1.7, \
             resolution0=16, upsampling_steps=2):
-    # import pdb; pdb.set_trace()
+    '''
+    Generate mesh function for OccNet
+    '''
     model.eval()
 
     threshold = np.log(threshold) - np.log(1. - threshold)
@@ -245,7 +206,6 @@ def generate_mesh(img, points, model, threshold=0.2, box_size=1.7, \
     return mesh
 
 def extract_mesh(value_grid, feats, box_size, threshold, constant_values=-1e6):
-    # import pdb; pdb.set_trace()
     n_x, n_y, n_z = value_grid.shape
     value_grid_padded = np.pad(
             value_grid, 1, 'constant', constant_values=constant_values)
@@ -319,8 +279,6 @@ def eval_mesh(mesh, pointcloud_gt, normals_gt, points, val_gt, \
     precision_array = np.array(precision_array, dtype=np.float32)
     recall_array = np.array(recall_array, dtype=np.float32)
 
-    # import pdb; pdb.set_trace()
-
     accuracy = accuracy.mean()
     normals_accuracy = normals_accuracy.mean()
 
@@ -335,8 +293,6 @@ def eval_mesh(mesh, pointcloud_gt, normals_gt, points, val_gt, \
         occ_mesh = check_mesh_contains(mesh, points.cpu().numpy().squeeze(0))
         iou = compute_iou(occ_mesh, val_gt.cpu().numpy().squeeze(0))
     else:
-        # import pdb; pdb.set_trace()
-
         occ_mesh = check_mesh_contains(mesh, points.cpu().numpy().squeeze(0))
         val_gt_np = val_gt.cpu().numpy()
         occ_gt = val_gt_np <= iso
@@ -431,7 +387,7 @@ def generate_mesh_sdf(img, model, obj_path, sdf_path, iso=0.003, box_size=1.01, 
 def generate_mesh_mise_sdf(img, points, model, threshold=0.003, box_size=1.7, \
             resolution=64, upsampling_steps=2):
     '''
-    Generates mesh for occupancy representations using MISE algorithm
+    Generates mesh for sdf representations using MISE algorithm
     '''
     model.eval()
 
@@ -462,10 +418,8 @@ def generate_mesh_mise_sdf(img, points, model, threshold=0.003, box_size=1.7, \
                     occ_pred.append(occ_pred_split.cpu().numpy().reshape(-1))
                 occ_pred = np.concatenate(np.asarray(occ_pred),axis=0)
                 values = occ_pred.reshape(-1)
-
             else:
                 pq = torch.FloatTensor(pq).cuda().unsqueeze(0)
-
                 occ_pred = model.decoder(pq, feats)
                 values = occ_pred.squeeze(0).detach().cpu().numpy()
         values = values.astype(np.float64)
@@ -475,37 +429,6 @@ def generate_mesh_mise_sdf(img, points, model, threshold=0.003, box_size=1.7, \
     value_grid = mesh_extractor.to_dense()
     mesh = extract_mesh(value_grid, feats, box_size, threshold, constant_values=1e6)
     return mesh
-
-def clean_mesh(src_mesh, tar_mesh, dist_thresh=0.2, num_thresh=0.3):
-    src_mesh_obj = pymesh.load_mesh(src_mesh)
-    dis_meshes = pymesh.separate_mesh(src_mesh_obj, connectivity_type='auto')
-    max_mesh_verts = 0
-    dis_meshes = sorted(dis_meshes, key=lambda d_mesh: len(d_mesh.vertices))
-    for dis_mesh in dis_meshes:
-       if dis_mesh.vertices.shape[0] > max_mesh_verts:
-           max_mesh_verts = dis_mesh.vertices.shape[0]
-
-    collection=[]
-    for i, dis_mesh in enumerate(dis_meshes):
-        if dis_mesh.vertices.shape[0] > max_mesh_verts*num_thresh:
-            centroid = np.mean(dis_mesh.vertices, axis=0)
-            if np.sqrt(np.sum(np.square(centroid))) < dist_thresh:
-                collection.append(dis_mesh)
-        if len(collection) == 0 and i == len(dis_meshes)-1:
-            collection = dis_meshes
-    if len(collection) > 1:
-        collection = sorted(collection, key=lambda d_mesh: len(d_mesh.vertices))
-        # import pdb; pdb.set_trace()
-        new_collection = []
-        for i, dis_mesh in enumerate(collection):
-            if trimesh.Trimesh(dis_mesh.vertices, dis_mesh.faces).is_volume\
-                     == True:
-                new_collection.append(dis_mesh)
-            if len(new_collection) == 0 and i == len(collection)-1:
-                new_collection = collection  
-        collection = new_collection  
-    tar_mesh_obj = pymesh.merge_meshes(collection)
-    pymesh.save_mesh_raw(tar_mesh, tar_mesh_obj.vertices, tar_mesh_obj.faces)
 
 
 

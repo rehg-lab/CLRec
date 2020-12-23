@@ -25,7 +25,7 @@ def main():
     date = datetime.now().date().strftime("%m_%d_%Y")
     log_dir = os.path.join(log_dir, exp_name, date)
     os.makedirs(log_dir, exist_ok=True)
-    utils.writelogfile(log_dir)
+    utils.writelogfile(config, log_dir)
 
 
     # output directory
