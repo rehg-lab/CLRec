@@ -74,10 +74,12 @@ def main():
 
     # Get all training classes
     all_classes_orig = train_dataset.catnames
+    total_classes = len(all_classes_orig)
 
     cat_map = {}
+    perm_path = './perm/rep_%s_%s_%s.npz'%(str(num_rep), str(nclass), str(total_classes))
     ###### Note: fix perm for odd number of classes
-    if not os.path.exists('./perm/rep_%s_%s.npz'%(str(num_rep), str(nclass))):
+    if not os.path.exists(perm_path):
         perm_all = np.concatenate([np.random.permutation(np.arange(len(all_classes_orig))) \
         	for _ in range(num_rep)])
         # Reshape to N exposures x nclass
@@ -85,7 +87,7 @@ def main():
         perm_all = np.random.permutation(perm_all)
         all_classes = np.asarray(all_classes_orig)[perm_all]
     else:
-        all_classes = np.load('./perm/rep_%s_%s.npz'%(str(num_rep), str(nclass)))\
+        all_classes = np.load(perm_path)\
         	['all_classes']
     
     for cl_ind, cl_group in enumerate(all_classes):
@@ -111,18 +113,14 @@ def main():
         criterion = utils.LpLoss
     else:
         raise Exception('Algorithm not supported')
-
-
-    if shape_rep == 'occ':
-        max_metric_val = 0
-    elif shape_rep == 'sdf':
-        max_metric_val = np.zeros(2, dtype=np.float32)
         
     metric_val_array = []
     epoch_val_array = []
     loss_val_array = []
 
-    metric_val_matrr = np.zeros((len(all_classes),len(all_classes_orig)),dtype=np.float32) #num_models x num_classes
+    # Stores val IoU for each class at each learning exposure
+	# num exposure x num_classes
+    metric_val_matrr = np.zeros((len(all_classes),len(all_classes_orig)),dtype=np.float32)
     seen_classes = []
 
     if shape_rep == 'occ':
@@ -137,7 +135,10 @@ def main():
 
 
     if cont is not None:
-    	current_counter = int(cont.split('-')[1])+1
+    	try:
+    		current_counter = int(cont.split('-')[1])+1
+    	except Exception:
+    		print("Current counter is not an integer")
         checkpoint = torch.load(os.path.join(out_dir, cont))
         model.load_state_dict(checkpoint['model_state_dict'])
         optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
@@ -148,7 +149,8 @@ def main():
                 if isinstance(v, torch.Tensor):
                     state[k] = v.cuda()
         epoch_it = checkpoint['epoch']
-
+        if epoch_it != num_epochs:
+        	raise Exception("Please make sure to continue from the last epoch of a learning exposure")
         if os.path.exists(os.path.join(out_dir, 'train.npz')):
             # Load saved data
             try:
@@ -158,10 +160,12 @@ def main():
                 loss_train_array = train_npz['loss']
                 perm_load = train_npz['perm']
                 seen_classes_load = train_npz['seen_classes']
-                metric_train_array = list(metric_train_array[epoch_train_array <= epoch_it])
-                loss_train_array = list(loss_train_array[epoch_train_array <= epoch_it])
-                epoch_train_array = list(epoch_train_array[epoch_train_array <= epoch_it])
-                max_metric_train = np.max(np.asarray(metric_train_array),axis=0)
+                # If num_epochs = 500, verbose_step = 10 and current_counter = 5
+                # then ckpt = 250 
+                ckpt = ((num_epochs-verbose_step)//verbose_step+1)*current_counter
+                metric_train_array = list(metric_train_array[:ckpt])
+                loss_train_array = list(loss_train_array[:ckpt])
+                epoch_train_array = list(epoch_train_array[:ckpt])
             except Exception:
                 print('Cannot load train npz')
         if os.path.exists(os.path.join(out_dir, 'val.npz')):
@@ -176,11 +180,10 @@ def main():
                 epoch_val_array = val_npz['epoch']
                 loss_val_array = val_npz['loss']
 
-                metric_val_array = list(metric_val_array[epoch_val_array <= epoch_it])
-                loss_val_array = list(loss_val_array[epoch_val_array <= epoch_it])
-                epoch_val_array = list(epoch_val_array[epoch_val_array <= epoch_it])
-
-                max_metric_val = np.max(np.asarray(metric_val_array))
+				ckpt = ((num_epochs-eval_step)//eval_step+1)*current_counter
+                metric_val_array = list(metric_val_array[:ckpt])
+                loss_val_array = list(loss_val_array[:ckpt])
+                epoch_val_array = list(epoch_val_array[:ckpt])
 
                 metric_val_matrr_load = val_npz['metric_matrr']
                 metric_val_matrr[:metric_val_matrr_load.shape[0],:metric_val_matrr_load.shape[1]]\
@@ -188,15 +191,11 @@ def main():
             except Exception:
                 print('Cannot load val npz')
 
-        if not os.path.exists('./perm/rep_%s_%s.npz'%(str(num_rep), str(nclass))) \
+        if not os.path.exists(perm_path) \
         	and len(perm_load) != 0 and len(seen_classes_load) != 0:
-            try:
-                current_counter = int(cont.split('-')[1])+1
-                all_classes = perm_load
-                seen_classes = seen_classes_load
-            except Exception:
-                print('Current counter is not an integer')
-        elif os.path.exists('./perm/rep_%s_%s.npz'%(str(num_rep), str(nclass))) \
+            all_classes = perm_load
+            seen_classes = seen_classes_load
+        elif os.path.exists(perm_path) \
         	and len(perm_load) != 0 and len(seen_classes_load) != 0:
             seen_classes = seen_classes_load
         
@@ -240,7 +239,6 @@ def main():
             max_metric_train = np.zeros(2, dtype=np.float32)
 
         while True:
-            # import pdb; pdb.set_trace()
             epoch_it += 1
             if num_epochs is not None and epoch_it > num_epochs:
                 break
@@ -309,8 +307,10 @@ def main():
                         batch_size, epoch_it, shape_rep)
                     print('Mean loss on val set: %.4f'%(mean_loss_val))
                     if shape_rep == 'occ':
+                    	metric_val_matrr[current_counter, s] = mean_metric_val[0]
                         print('Mean IoU on val set: %.4f'%(mean_metric_val[0]))
                     elif shape_rep == 'sdf':
+                    	metric_val_matrr[current_counter, s] = mean_metric_val[2]
                         print('Mean IoU on val set: %.4f'%(mean_metric_val[2]))
                         print('Mean accuracy on val set: %.4f'%(mean_metric_val[1]))
 
@@ -318,37 +318,19 @@ def main():
                     epoch_val_array.append(epoch_it)
                     loss_val_array.append(mean_loss_val)
 
-                    # For DISN
                 print(metric_val_matrr)
-                np.savez(os.path.join(out_dir, 'val.npz'), metric=metric_val_array, epoch=epoch_val_array, loss=loss_val_array, metric_matrr=metric_val_matrr, perm=all_classes, seen_classes=seen_classes, current_counter=cl_count)
+                np.savez(os.path.join(out_dir, 'val.npz'), metric=metric_val_array, \
+                		epoch=epoch_val_array, loss=loss_val_array, metric_matrr=metric_val_matrr, \
+                		perm=all_classes, seen_classes=seen_classes, current_counter=cl_count)
 
-                # Saving best model based on val metric
-                if shape_rep == 'occ':
-                    if mean_metric_val[0] > max_metric_val:
-                        max_metric_val = copy.deepcopy(mean_metric_val[0])
-                        if cont is None:
-                            torch.save(model.module.state_dict(), os.path.join(out_dir, 'best_model.pth.tar'))
-                        else:
-                            torch.save(model.module.state_dict(), os.path.join(out_dir, 'best_model_cont.pth.tar'))
-                elif shape_rep == 'sdf':
-                    if mean_metric_val[2] > max_metric_val[0]:
-                        max_metric_val[0] = copy.deepcopy(mean_metric_val[2])
-                        if cont is None:
-                            torch.save(model.module.state_dict(), os.path.join(out_dir, 'best_model_iou.pth.tar'))
-                        else:
-                            torch.save(model.module.state_dict(), os.path.join(out_dir, 'best_model_iou_cont.pth.tar'))
                 del mean_loss_val
         
         train_dataset.clear()
         eval_train_dataset.clear()
 
-
-
-    
 def train(model, criterion, optimizer, train_loader, \
             batch_size, epoch_it, shape_rep):
     model.train()
-    # import pdb; pdb.set_trace()
     with tqdm(total=int(len(train_loader)), ascii=True) as pbar:
         for mbatch in train_loader:
             img_input, points_input, values, labels = mbatch
@@ -419,7 +401,6 @@ def eval(model, criterion, optimizer, loader, batch_size, epoch_it, shape_rec):
                 pbar.update(1)
 
     mean_loss = np.mean(np.array(loss_collect))
-    # import pdb; pdb.set_trace()
     if shape_rec == 'occ':
         mean_metric = np.mean(np.concatenate(metric_collect))
         mean_metric = [mean_metric]
