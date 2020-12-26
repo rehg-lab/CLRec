@@ -367,7 +367,7 @@ class Dataset(Dataset):
     def get_current_data_class(self, cls):
         '''
         Get data from specified class
-        arg:
+        args:
             cls: ground truth class
         '''
         indices = self.current_indices
