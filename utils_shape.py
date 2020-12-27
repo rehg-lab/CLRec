@@ -225,7 +225,7 @@ def extract_mesh(value_grid, feats, box_size, threshold, constant_values=-1e6):
     return mesh
 
 def eval_mesh(mesh, pointcloud_gt, normals_gt, points, val_gt, \
-                num_fscore_thres=6, n_points=300000, shape_rec='occ', \
+                num_fscore_thres=6, n_points=300000, shape_rep='occ', \
                 sdf_val=None, iso=0.003):
 
     if mesh is not None and type(mesh)==trimesh.base.Trimesh and len(mesh.vertices) != 0 and len(mesh.faces) != 0:
@@ -233,7 +233,7 @@ def eval_mesh(mesh, pointcloud_gt, normals_gt, points, val_gt, \
         pointcloud = pointcloud.astype(np.float32)
         normals = mesh.face_normals[idx]
     else:
-        if shape_rec == 'occ':
+        if shape_rep == 'occ':
             return {'iou': 0., 'cd': 2*np.sqrt(3), 'completeness': np.sqrt(3),\
                     'accuracy': np.sqrt(3), 'normals_completeness': -1,\
                     'normals_accuracy': -1, 'normals': -1, \
@@ -289,7 +289,7 @@ def eval_mesh(mesh, pointcloud_gt, normals_gt, points, val_gt, \
     normals = 0.5*(normals_completeness+normals_accuracy)
 
     # Compute IoU
-    if shape_rec == 'occ':
+    if shape_rep == 'occ':
         occ_mesh = check_mesh_contains(mesh, points.cpu().numpy().squeeze(0))
         iou = compute_iou(occ_mesh, val_gt.cpu().numpy().squeeze(0))
     else:

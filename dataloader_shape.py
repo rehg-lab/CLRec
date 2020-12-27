@@ -4,7 +4,7 @@ from torch.utils.data import Dataset
 from PIL import Image
 import os
 import glob
-import utils
+import utils_shape as utils
 import json
 from torchvision import transforms
 
@@ -78,14 +78,14 @@ class Dataset(Dataset):
                             for (obj, cat) in self.obj_cat_map \
                             if os.path.exists(os.path.join(self.src_dataset_path, cat, obj))]
         if self.coord_system == '3dvc':
-            # self.hvc_metadata_split_paths = [os.path.join(self.src_dataset_path, cat, \
-            #             obj, 'hard_vc_metadata.txt') \
-            #                 for (obj, cat) in self.obj_cat_map \
-            #                 if os.path.exists(os.path.join(self.src_dataset_path, cat, obj))]
             self.hvc_metadata_split_paths = [os.path.join(self.src_dataset_path, cat, \
-                        obj, '3DOF_vc_metadata.txt') \
+                        obj, 'hard_vc_metadata.txt') \
                             for (obj, cat) in self.obj_cat_map \
                             if os.path.exists(os.path.join(self.src_dataset_path, cat, obj))]
+            # self.hvc_metadata_split_paths = [os.path.join(self.src_dataset_path, cat, \
+            #             obj, '3DOF_vc_metadata.txt') \
+            #                 for (obj, cat) in self.obj_cat_map \
+            #                 if os.path.exists(os.path.join(self.src_dataset_path, cat, obj))]
         # Input RGB image transform function
         self.img_transform = transforms.Compose([
             transforms.Resize(self.input_size),

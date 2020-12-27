@@ -16,7 +16,7 @@ class SDFNet(nn.Module):
     def __init__(self, config, input_point_dim=3, latent_dim=256, size_hidden=256, pretrained=False):
         super().__init__()
 
-        self.encoder = Encoder(latent_dim, pretrained=pretrained)
+        self.encoder = Encoder(config, latent_dim, pretrained=pretrained)
         self.decoder = Decoder(input_point_dim, latent_dim, size_hidden)
         self.config = config
 

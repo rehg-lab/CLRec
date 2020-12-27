@@ -3,26 +3,24 @@ import numpy as np
 import os
 import trimesh
 from tqdm import tqdm
-import config_incr as config
+import config_shape as config
 from dataloader_shape import Dataset
 
 from model_shape import SDFNet
 from torch.autograd import Variable
 import torch.optim as optim
-import utils
+import utils_shape as utils
 
 
 def main():
     out_dir = config.training['out_dir']
-    shape_rec = config.training['shape_rec']
-    model_selection_path = config.testing['model_selection_path']
+    shape_rep = config.training['shape_rep']
     cont = config.training['cont']
 
     eval_task_name = config.testing['eval_task_name']
     eval_dir = os.path.join(out_dir, 'eval')
     eval_task_dir = os.path.join(eval_dir, eval_task_name)
     os.makedirs(eval_task_dir, exist_ok=True)
-    mdl = config.training['model']
 
     batch_size_test = config.testing['batch_size_test']
     coord_system = config.training['coord_system']
@@ -35,7 +33,7 @@ def main():
 
     # Dataset
     print('Loading data...')
-    test_dataset = Dataset(config, mode='test', shape_rec=shape_rec, \
+    test_dataset = Dataset(config, mode='test', shape_rep=shape_rep, \
         coord_system=coord_system)
 
     test_loader = torch.utils.data.DataLoader(
@@ -63,7 +61,7 @@ def main():
            print('Current counter is not an integer')
 
     # Loading model
-    model = SDFNet(config, model=mdl)
+    model = SDFNet(config)
     model = torch.nn.DataParallel(model).cuda()
     optimizer = optim.Adam(model.parameters(), lr=1e-4)
 
@@ -83,9 +81,9 @@ def main():
         print('Num seen classes: ', len(seen_classes))
         cl_count += current_counter
         # Load model and reload loader
-        if shape_rec == 'sdf':
+        if shape_rep == 'sdf':
             model_path = 'best_model_iou_train-%s.pth.tar'%(cl_count)
-        elif shape_rec == 'occ':
+        elif shape_rep == 'occ':
             model_path = 'best_model_train-%s.pth.tar'%(cl_count)
 
         new_classes = []
@@ -106,8 +104,8 @@ def main():
         out_acc_cl = []
 
         for s in range(len(seen_classes)):
-            print('Evaluating exposure %s, learned class %s, evaluating class %s'\
-                %(cl_count, cl, seen_classes[s]))
+            print('Evaluating exposure %s, class %s'\
+                %(cl_count, seen_classes[s]))
 
             out_obj_cat = []
             out_pose = []
@@ -136,12 +134,12 @@ def main():
                         cat_path = os.path.join(eval_task_dir, cat[0])
 
                         os.makedirs(cat_path, exist_ok=True)
-                        if shape_rec == 'occ':
+                        if shape_rep == 'occ':
                             mesh = utils.generate_mesh(img_input, points_input, \
                                 model.module)
                             obj_path = os.path.join(cat_path, '%s.obj' % obj[0])
                             mesh.export(obj_path)
-                        elif shape_rec == 'sdf':
+                        elif shape_rep == 'sdf':
                             obj_path = os.path.join(cat_path, '%s-%s.obj' \
                                 % (cl_count, obj[0]))
                             sdf_path = os.path.join(cat_path, '%s-%s.dist' \
@@ -156,10 +154,10 @@ def main():
                         out_pose.append(pose)
                         
                         # Calculate metrics
-                        if shape_rec == 'occ':
+                        if shape_rep == 'occ':
                             out_dict = utils.eval_mesh(mesh, pointclouds, normals,\
                                         points_input, values)
-                        elif shape_rec == 'sdf':
+                        elif shape_rep == 'sdf':
                             # load the mesh
                             if os.path.exists(obj_path):
                                 #### Load mesh
@@ -169,7 +167,7 @@ def main():
                             sdf_val = model(points_input, img_input)
 
                             out_dict = utils.eval_mesh(mesh, pointclouds, normals, \
-                                        points_input, values, shape_rec='sdf',\
+                                        points_input, values, shape_rep='sdf',\
                                         sdf_val=sdf_val)
                         
                         out_cd.append(out_dict['cd'])

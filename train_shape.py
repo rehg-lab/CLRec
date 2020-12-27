@@ -9,7 +9,7 @@ import torch.multiprocessing as mp
 import subprocess
 import config_shape as config
 from datetime import datetime
-import utils
+import utils_shape as utils
 from dataloader_shape import Dataset
 
 from model_shape import SDFNet
@@ -58,7 +58,7 @@ def main():
     # Dataset
     print('Loading data...')
     train_dataset = Dataset(config, num_points=num_points, mode='train', \
-    	shape_rep=shape_rep, coord_system=coord_system)
+        shape_rep=shape_rep, coord_system=coord_system)
     eval_train_dataset = Dataset(config, mode='val', shape_rep=shape_rep, \
         coord_system=coord_system)
     val_dataset = Dataset(config, mode='val', shape_rep=shape_rep, coord_system=coord_system)
@@ -81,14 +81,14 @@ def main():
     ###### Note: fix perm for odd number of classes
     if not os.path.exists(perm_path):
         perm_all = np.concatenate([np.random.permutation(np.arange(len(all_classes_orig))) \
-        	for _ in range(num_rep)])
+            for _ in range(num_rep)])
         # Reshape to N exposures x nclass
         perm_all = perm_all.reshape((len(perm_all)//nclass,nclass))
         perm_all = np.random.permutation(perm_all)
         all_classes = np.asarray(all_classes_orig)[perm_all]
     else:
         all_classes = np.load(perm_path)\
-        	['all_classes']
+            ['all_classes']
     
     for cl_ind, cl_group in enumerate(all_classes):
         for sub_cl_ind, cl in enumerate(cl_group):
@@ -101,8 +101,8 @@ def main():
 
     # Model
     print('Initializing network...')
-    model = SDFNet(config, model=mdl)
-    model_eval = SDFNet(config, model=mdl)
+    model = SDFNet(config)
+    model_eval = SDFNet(config)
 
     # Initialize training
     optimizer = optim.Adam(model.parameters(), lr=1e-4)
@@ -119,7 +119,7 @@ def main():
     loss_val_array = []
 
     # Stores val IoU for each class at each learning exposure
-	# num exposure x num_classes
+    # num exposure x num_classes
     metric_val_matrr = np.zeros((len(all_classes),len(all_classes_orig)),dtype=np.float32)
     seen_classes = []
 
@@ -135,10 +135,10 @@ def main():
 
 
     if cont is not None:
-    	try:
-    		current_counter = int(cont.split('-')[1])+1
-    	except Exception:
-    		print("Current counter is not an integer")
+        try:
+            current_counter = int(cont.split('-')[1])+1
+        except Exception:
+            print("Current counter is not an integer")
         checkpoint = torch.load(os.path.join(out_dir, cont))
         model.load_state_dict(checkpoint['model_state_dict'])
         optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
@@ -150,7 +150,7 @@ def main():
                     state[k] = v.cuda()
         epoch_it = checkpoint['epoch']
         if epoch_it != num_epochs:
-        	raise Exception("Please make sure to continue from the last epoch of a learning exposure")
+            raise Exception("Please make sure to continue from the last epoch of a learning exposure")
         if os.path.exists(os.path.join(out_dir, 'train.npz')):
             # Load saved data
             try:
@@ -180,7 +180,7 @@ def main():
                 epoch_val_array = val_npz['epoch']
                 loss_val_array = val_npz['loss']
 
-				ckpt = ((num_epochs-eval_step)//eval_step+1)*current_counter
+                ckpt = ((num_epochs-eval_step)//eval_step+1)*current_counter
                 metric_val_array = list(metric_val_array[:ckpt])
                 loss_val_array = list(loss_val_array[:ckpt])
                 epoch_val_array = list(epoch_val_array[:ckpt])
@@ -192,17 +192,16 @@ def main():
                 print('Cannot load val npz')
 
         if not os.path.exists(perm_path) \
-        	and len(perm_load) != 0 and len(seen_classes_load) != 0:
+            and len(perm_load) != 0 and len(seen_classes_load) != 0:
             all_classes = perm_load
             seen_classes = seen_classes_load
         elif os.path.exists(perm_path) \
-        	and len(perm_load) != 0 and len(seen_classes_load) != 0:
+            and len(perm_load) != 0 and len(seen_classes_load) != 0:
             seen_classes = seen_classes_load
         
         seen_classes = list(seen_classes)
 
 
-    # import pdb; pdb.set_trace()
     # Saving meta config for loading
     meta_config_path = os.path.join(out_dir, 'meta_config.npz')
     np.savez(meta_config_path, training=config.training, \
@@ -217,11 +216,12 @@ def main():
     model = torch.nn.DataParallel(model).cuda()
     model_eval = torch.nn.DataParallel(model_eval).cuda()
 
+
     print(metric_val_matrr.shape)
     print('Start training...')
     for cl_count, cl_group in enumerate(all_classes[current_counter:]):
         cl_count += current_counter
-        # import pdb; pdb.set_trace()
+
         for cl in cl_group:
             print('Class: ', cl)
 
@@ -271,26 +271,27 @@ def main():
                 loss_train_array.append(mean_loss)
 
                 np.savez(os.path.join(out_dir, 'train.npz'), metric=metric_train_array, \
-                	epoch=epoch_train_array, loss=loss_train_array, perm=all_classes, \
-                	seen_classes=seen_classes, current_counter=cl_count)
+                    epoch=epoch_train_array, loss=loss_train_array, perm=all_classes, \
+                    seen_classes=seen_classes, current_counter=cl_count)
 
                 # Saving best model based on metric
                 if shape_rep == 'occ':
                     if mean_metric[0] > max_metric_train:
+                        print('Saving best model')
                         max_metric_train = copy.deepcopy(mean_metric[0])
                         print('Saving best model')
                         torch.save(model.module.state_dict(), \
-                        	os.path.join(out_dir, 'best_model_train-%s.pth.tar'%(cl_count)))
+                            os.path.join(out_dir, 'best_model_train-%s.pth.tar'%(cl_count)))
                         model_eval.module.load_state_dict(\
-                        	copy.deepcopy(model.module.state_dict()))
+                            copy.deepcopy(model.module.state_dict()))
                 elif shape_rep == 'sdf':
                     if mean_metric[2] > max_metric_train[0]:
                         print('Saving best model')
                         max_metric_train[0] = copy.deepcopy(mean_metric[2])
                         torch.save(model.module.state_dict(), \
-                        	os.path.join(out_dir, 'best_model_iou_train-%s.pth.tar'%(cl_count)))
+                            os.path.join(out_dir, 'best_model_iou_train-%s.pth.tar'%(cl_count)))
                         model_eval.module.load_state_dict(\
-                        	copy.deepcopy(model.module.state_dict()))
+                            copy.deepcopy(model.module.state_dict()))
                                                 
                     if mean_metric[1] > max_metric_train[1]:
                         max_metric_train[1] = copy.deepcopy(mean_metric[1])
@@ -303,14 +304,14 @@ def main():
 
                     print('Evaluating on test data of class %s...'%(seen_classes[s]))
                     mean_loss_val, mean_metric_val = eval(\
-                    	model_eval, criterion, optimizer, val_loader, \
+                        model_eval, criterion, optimizer, val_loader, \
                         batch_size, epoch_it, shape_rep)
                     print('Mean loss on val set: %.4f'%(mean_loss_val))
                     if shape_rep == 'occ':
-                    	metric_val_matrr[current_counter, s] = mean_metric_val[0]
+                        metric_val_matrr[current_counter, s] = mean_metric_val[0]
                         print('Mean IoU on val set: %.4f'%(mean_metric_val[0]))
                     elif shape_rep == 'sdf':
-                    	metric_val_matrr[current_counter, s] = mean_metric_val[2]
+                        metric_val_matrr[current_counter, s] = mean_metric_val[2]
                         print('Mean IoU on val set: %.4f'%(mean_metric_val[2]))
                         print('Mean accuracy on val set: %.4f'%(mean_metric_val[1]))
 
@@ -320,8 +321,8 @@ def main():
 
                 print(metric_val_matrr)
                 np.savez(os.path.join(out_dir, 'val.npz'), metric=metric_val_array, \
-                		epoch=epoch_val_array, loss=loss_val_array, metric_matrr=metric_val_matrr, \
-                		perm=all_classes, seen_classes=seen_classes, current_counter=cl_count)
+                        epoch=epoch_val_array, loss=loss_val_array, metric_matrr=metric_val_matrr, \
+                        perm=all_classes, seen_classes=seen_classes, current_counter=cl_count)
 
                 del mean_loss_val
         

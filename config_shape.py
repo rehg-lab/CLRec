@@ -17,7 +17,7 @@ data_setting = dict(
 		categories = None
 		)
 training = dict(
-		out_dir = '/data/DevLearning/SDFNet_model_output/sdfnet_55_single',
+		out_dir = '/data/DevLearning/SDFNet_model_output/test_release',
 		batch_size = 128,
 		batch_size_eval = 16,
 		num_epochs = 500,
@@ -27,6 +27,8 @@ training = dict(
 		eval_step = 500, 
 		verbose_step = 10,
 		num_points = 2048,
+		# Example of a valid cont
+		# cont = 'model-0-500.pth.tar',
 		cont = None,
 		shape_rep = 'sdf',
 		model = None,
@@ -36,13 +38,14 @@ training = dict(
 		)
 logging = dict(
 		log_dir = '/data/DevLearning/SDFNet_model_output/log',
-		exp_name = 'sdfnet_55_single'
+		exp_name = 'test'
 		)
 testing = dict(
-		eval_task_name = 'sdfnet_55_single',
+		eval_task_name = 'test',
 		box_size = 1.7,
 		# Always 1 if generating mesh on the fly
 		batch_size_test = 1,
+		# Eval up to "split_counter" learning exposure
 		split_counter = 10
 		) 
 
