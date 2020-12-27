@@ -207,9 +207,9 @@ def main():
     np.savez(meta_config_path, training=config.training, \
         testing=config.testing, data_setting=config.data_setting, \
         logging=config.logging, path=config.path)
-    if not os.path.exists('./perm/rep_%s_%s.npz'%(str(num_rep), str(nclass))):
+    if not os.path.exists(perm_path):
         os.makedirs('./perm',exist_ok=True)
-        np.savez('./perm/rep_%s_%s.npz'%(str(num_rep), str(nclass)), all_classes=all_classes)
+        np.savez(perm_path, all_classes=all_classes)
 
 
     # Data parallel
