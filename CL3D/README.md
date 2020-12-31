@@ -23,7 +23,7 @@ The following are links to download pretrained SDFNet models
 ```bash
 python eval_shape.py
 python plot_script.py
-
+```
 This project uses code based on parts of the following repositories
 
-1. [3D Reconstruction of Novel Object Shapes from Single Images](3D Reconstruction of Novel Object Shapes from Single Images)
+1. [3D Reconstruction of Novel Object Shapes from Single Images](https://github.com/rehg-lab/3DShapeGen)
