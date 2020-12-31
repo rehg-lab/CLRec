@@ -7,13 +7,13 @@ Please see the instructions in [SDFNet](https://github.com/rehg-lab/3DShapeGen/t
 1. [Train/Val/Test json on 13 classes of ShapeNetCore.v2](https://www.dropbox.com/s/7shqu6krvs9x1ib/data_split.json)
 1. [Train/Val/Test json on 55 classes of ShapeNetCore.v2](https://www.dropbox.com/s/7shqu6krvs9x1ib/data_split_55.json)
 
-### Training SDFNet
+### Training C-SDFNet
 After changing the parameters in `config.py` run the following to train the model from scratch
 ```bash
 python train_shape.py
 ```
-### Pre-trained SDFNet
-The following are links to download pretrained SDFNet models
+### Pre-trained models
+The following are links to download pretrained C-SDFNet and C-OccNet models
 1. [C-SDFNet VC Single Exposure ShapeNetCore.v2](https://www.dropbox.com/s/p6pxqyxk1p5gp8f/best_model_gt_dn_3DOF.pth.tar)
 2. [C-OccNet VC Single Exposure ShapeNetCore.v2](https://www.dropbox.com/s/uavq47qt80ltbyq/best_model_pred_dn_3DOF.pth.tar)
 3. [C-SDFNet VC Repeated Exposures ShapeNet13](https://www.dropbox.com/s/uavq47qt80ltbyq/best_model_pred_dn_3DOF.pth.tar)
