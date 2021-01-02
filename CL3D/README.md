@@ -1,5 +1,18 @@
 ### Environment Setup
-Please see the instructions in [SDFNet](https://github.com/rehg-lab/3DShapeGen/tree/master/SDFNet)
+The instructions in this section follow [SDFNet](https://github.com/rehg-lab/3DShapeGen/tree/master/SDFNet)
+Create environment using [anaconda](https://docs.conda.io/projects/conda/en/latest/user-guide/install/)
+```bash
+conda env create -f ../environment.yml
+```
+Compile OccNet extension modules in `mesh_gen_utils`
+```bash
+python setup.py build_ext --inplace
+```
+To generate ground truths and perform testing, change the path in `isosurface/LIB_PATH` to your miniconda/anaconda libraries, for example
+```bash
+export LD_LIBRARY_PATH="<path_to_anaconda>/lib:<path_to_anaconda>/envs/sdf_net/lib:./isosurface:$LD_LIBRARY_PATH" 
+source isosurface/LIB_PATH
+```
 
 ### Data
 1. [ShapeNetCore.v2 SDF + Point Clouds](https://www.dropbox.com/s/75lxxtmxkdr1be9/ShapeNet55_sdf.tar)
@@ -19,7 +32,8 @@ The following are links to download pretrained C-SDFNet and C-OccNet models
 3. [C-SDFNet VC Repeated Exposures ShapeNet13](https://www.dropbox.com/s/uavq47qt80ltbyq/best_model_pred_dn_3DOF.pth.tar)
 4. [C-OccNet VC Repeated Exposures ShapeNet13](https://www.dropbox.com/s/uavq47qt80ltbyq/best_model_pred_dn_3DOF.pth.tar)
 5. [C-SDFNet OC Repeated Exposures ShapeNet13](https://www.dropbox.com/s/uavq47qt80ltbyq/best_model_pred_dn_3DOF.pth.tar)
-### Testing SDFNet
+
+### Testing C-SDFNet
 ```bash
 python eval_shape.py
 python plot_script.py
