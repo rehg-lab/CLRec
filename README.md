@@ -10,4 +10,16 @@ Follow instructions in [CL3D README](https://github.com/ngailapdi/CLRec/blob/mas
 ## Training and evaluating YASS
 Follow instructions in [YASS README](https://github.com/ngailapdi/CLRec/blob/master/YASS/README.md)
 
+## Citing
+```bibtex
+@misc{TO-ADD,
+      title={Does Continual Learning = Catastrophic Forgetting?}, 
+      author={Anh Thai and Stefan Stojanov and Isaac Rehg and James M. Rehg},
+      year={2021},
+      eprint={to-add},
+      archivePrefix={arXiv},
+      primaryClass={cs.CV}
+}
+```
+
 

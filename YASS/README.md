@@ -1,4 +1,3 @@
-# Incremental Object Learning from Contiguous Views
 The instructions in this README follow [Incremental Object Learning from Contiguous Views](https://github.com/iolfcv/experiments/blob/master/README.md)
 
 ### Environment Setup
