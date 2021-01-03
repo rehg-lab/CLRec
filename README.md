@@ -5,9 +5,9 @@ In this work we investigate continual learning of reconstruction tasks and provi
 This repository consists of the code for reproducing CL of 3D shape reconstruction, proxy task and YASS results.
 
 ## Training and evaluating C-SDFNet, C-OccNet and proxy task
-Follow instructions in [CL3D README](link)
+Follow instructions in [CL3D README](https://github.com/ngailapdi/CLRec/blob/master/CL3D/README.md)
 
 ## Training and evaluating YASS
-Follow instructions in [YASS README](link)
+Follow instructions in [YASS README](https://github.com/ngailapdi/CLRec/blob/master/YASS/README.md)
 
 

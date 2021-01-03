@@ -379,7 +379,6 @@ class iCIFAR10(CIFAR10):
             # normalize
             for img in range(11):
                 ######################################################
-
                 self.train_labels.append(self.train_labels[i])
             self.e_maps[start_len:self.curr_len,0] = np.array([self.e_maps[i,0]]*11)
             self.e_maps[start_len:self.curr_len,1] = np.array([self.e_maps[i,1]]*11)

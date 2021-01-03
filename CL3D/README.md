@@ -44,7 +44,7 @@ python plot_script.py
 
 ### Evaluating Proxy Task
 ```bash
-python main_proxy.py --num_explr=<# exemplars, default=20>
+python main_proxy.py --num_explr=<number of exemplars, default=20>
 ```
 This project uses code based on parts of the following repository
 

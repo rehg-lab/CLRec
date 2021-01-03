@@ -90,12 +90,6 @@ parser.add_argument('--random_explr', dest='random_explr', action='store_true',
                     help='Option for random exemplar set')
 parser.add_argument('--loss', default='BCE', type=str,
                     help='Loss to be used in classification')
-parser.add_argument('--file_path', default='', type=str,
-                    help='Path to csv file of pretrained model')
-parser.add_argument('--fixed_ex', dest='fixed_ex', action='store_true',
-                    help='Option to use a fixed set of exemplars')
-parser.add_argument('--ptr_model', dest='ptr_model', action='store_true',
-                    help='Option to use a pretrained a model')
 parser.add_argument('--full_explr', dest='full_explr', action='store_true',
                     help='Option to use the full exemplar set')
 
