@@ -41,6 +41,11 @@ The following are links to download pretrained C-SDFNet and C-OccNet models
 python eval_shape.py
 python plot_script.py
 ```
+
+### Evaluating Proxy Task
+```bash
+python main_proxy.py --num_explr=<# exemplars, default=20>
+```
 This project uses code based on parts of the following repository
 
 1. [3D Reconstruction of Novel Object Shapes from Single Images](https://github.com/rehg-lab/3DShapeGen)
