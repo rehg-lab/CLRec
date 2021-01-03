@@ -10,7 +10,7 @@ import torch.multiprocessing as mp
 import subprocess
 import config_shape as config
 from datetime import datetime
-import utils
+import utils_shape as utils
 from dataloader_shape import Dataset
 
 from model_shape import SDFNet
@@ -21,31 +21,6 @@ import argparse
 parser = argparse.ArgumentParser(description="Proxy Task")
 parser.add_argument("--num_explr", default=20, type=int,
                     help="Number of exemplars")
-
-def label_mapping(centroids, features, glabels):
-    label_set = set(glabels)
-    dist_queue = []
-    label_map = {}
-
-    for i, gl in enumerate(label_set):
-        fets = features[glabels == gl]
-        mean_feats = np.mean(fets, axis=0)
-        mean_feats = mean_feats/np.linalg.norm(mean_feats)
-        dists = [1-np.dot(mean_feats,c/np.linalg.norm(c)) for c in centroids]
-        dist_queue.append(dists)
-    dist_queue = np.concatenate(dist_queue)
-    as_dist_queue = np.argsort(dist_queue)
-    cluster_set = copy.deepcopy(label_set)
-
-    for ind in as_dist_queue:
-        gt_i = ind//len(centroids)
-        c_i = ind%len(centroids)
-        if gt_i in label_set and c_i in cluster_set:
-            label_map[gt_i] = c_i
-            cluster_set.remove(c_i)
-            label_set.remove(gt_i)
-    return label_map
-
 
 def calc_acc(plabels, glabels):
     '''
@@ -145,12 +120,15 @@ def main():
     os.makedirs(out_dir, exist_ok=True)
 
     num_classes = config.training['nclass']
+    coord_system = config.training['coord_system']
+    shape_rep = config.training['shape_rep']
 
     # Dataset
     print('Loading data...')
-    train_dataset = Dataset(num_points=2048, mode='train', algo='sdf', \
-        coord_system='hvc', config=config)
-    test_dataset = Dataset(num_points=2048, mode='test', algo='sdf', coord_system='hvc', config=config)
+    train_dataset = Dataset(num_points=2048, mode='train', shape_rep=shape_rep, \
+        coord_system=coord_system, config=config)
+    test_dataset = Dataset(num_points=2048, mode='test', shape_rep=shape_rep, \
+        coord_system=coord_system, config=config)
 
     train_loader = torch.utils.data.DataLoader(
         train_dataset, batch_size=256, num_workers=12, shuffle=True,\
@@ -160,7 +138,7 @@ def main():
 
     # Model
     print('Initializing network...')
-    shape_model = SDFNet(model=None, config=config)
+    shape_model = SDFNet(config=config)
 
     shape_train_file = os.path.join(out_dir, 'train.npz')
     if os.path.exists(shape_train_file):

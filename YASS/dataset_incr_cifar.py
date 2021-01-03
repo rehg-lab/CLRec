@@ -383,8 +383,6 @@ class iCIFAR10(CIFAR10):
                 self.train_labels.append(self.train_labels[i])
             self.e_maps[start_len:self.curr_len,0] = np.array([self.e_maps[i,0]]*11)
             self.e_maps[start_len:self.curr_len,1] = np.array([self.e_maps[i,1]]*11)
-        print("ORIG LEN: ===>", self.curr_orig_len)
-        print("CURR LEN: ===>", self.curr_len)
 
 class iCIFAR100(iCIFAR10):
     base_folder = "cifar-100-python"
