@@ -6,9 +6,8 @@ path = dict(
 		input_seg_path = 'segmentation',
 
 		src_pt_path = '/data/DevLearning/SDFNet_data/ShapeNet55_sdf',	
-		data_split_json_path = '/data/DevLearning/SDFNet_data/json_files/data_split_55.json',
-		src_mesh_path = '/data/devlearning/gensdf_data/ShapeNet_sdf_55'
-			)
+		data_split_json_path = '/data/DevLearning/SDFNet_data/json_files/data_split_55.json'
+		)
 data_setting = dict(
 		input_size = 224,
 		img_extension = 'png',
