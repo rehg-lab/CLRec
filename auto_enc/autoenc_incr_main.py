@@ -139,7 +139,7 @@ model = SegNet()
 
 # Randomly choose a subset of classes
 perm_id = np.arange(total_classes)
-perm_id = np.random.permutation(perm_id)
+# perm_id = np.random.permutation(perm_id)
 
 print ("perm_id:", perm_id)
 
