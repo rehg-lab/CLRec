@@ -1,12 +1,18 @@
 path = dict(
-		src_dataset_path = '/data/DevLearning/SDFNet_data/ShapeNet55_3DOF-VC_LRBg',
+		src_dataset_path = '/scr/devlearning/ShapeNet55_HVC_LR',
 		input_image_path = None,
 		input_depth_path = 'depth_NPZ',
 		input_normal_path = 'normal_output',
 		input_seg_path = 'segmentation',
 
-		src_pt_path = '/data/DevLearning/SDFNet_data/ShapeNet55_sdf',	
-		data_split_json_path = '/data/DevLearning/SDFNet_data/json_files/data_split_55.json',
+		############## For image
+		# input_image_path = 'image_output',
+		# input_depth_path = None,
+		# input_normal_path = None,
+		# input_seg_path = None,
+
+		src_pt_path = '/data/devlearning/gensdf_data/ShapeNet_sdf_55',	
+		data_split_json_path = '/data/devlearning/gensdf_data/json_files/data_split_55.json',
 		src_mesh_path = '/data/devlearning/gensdf_data/ShapeNet_sdf_55'
 			)
 data_setting = dict(
@@ -17,7 +23,7 @@ data_setting = dict(
 		categories = None
 		)
 training = dict(
-		out_dir = '/data/DevLearning/SDFNet_model_output/test_release',
+		out_dir = '/data/devlearning/model_output_incr/test_release',
 		batch_size = 128,
 		batch_size_eval = 16,
 		num_epochs = 500,

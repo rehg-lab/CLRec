@@ -161,7 +161,10 @@ def main():
                             # load the mesh
                             if os.path.exists(obj_path):
                                 #### Load mesh
-                                mesh = trimesh.load(obj_path)
+                                try:
+                                    mesh = trimesh.load(obj_path)
+                                except Exception:
+                                    mesh = None
                             else:
                                 mesh = None
                             sdf_val = model(points_input, img_input)

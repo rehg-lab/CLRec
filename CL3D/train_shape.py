@@ -67,10 +67,10 @@ def main():
         train_dataset, batch_size=batch_size, num_workers=12, shuffle=True, pin_memory=True)
     eval_train_loader = torch.utils.data.DataLoader(
         eval_train_dataset, batch_size=batch_size_eval, num_workers=12,\
-        drop_last=True, pin_memory=True)
+        drop_last=False, pin_memory=True)
     val_loader = torch.utils.data.DataLoader(
         val_dataset, batch_size=batch_size_eval, num_workers=12,\
-        drop_last=True, pin_memory=True)
+        drop_last=False, pin_memory=True)
 
     # Get all training classes
     all_classes_orig = train_dataset.catnames
@@ -360,11 +360,11 @@ def train(model, criterion, optimizer, train_loader, \
     return model
 
 
-def eval(model, criterion, optimizer, loader, batch_size, epoch_it, shape_rec):
+def eval(model, criterion, optimizer, loader, batch_size, epoch_it, shape_rep):
     model.eval()
     loss_collect = []
     metric_collect = []
-    if shape_rec == 'occ':
+    if shape_rep == 'occ':
         sigmoid = torch.nn.Sigmoid()
 
     with tqdm(total=int(len(loader)), ascii=True) as pbar:
@@ -387,13 +387,13 @@ def eval(model, criterion, optimizer, loader, batch_size, epoch_it, shape_rec):
 
                 loss_collect.append(loss.data.cpu().item())
 
-                if shape_rec == 'occ':
+                if shape_rep == 'occ':
                     logits = sigmoid(logits)
 
                     iou = utils.compute_iou(logits.detach().cpu().numpy(), \
                                 values.detach().cpu().numpy())
                     metric_collect.append([iou])
-                elif shape_rec == 'sdf':
+                elif shape_rep == 'sdf':
                     acc_sign, acc_thres, iou = utils.compute_acc(\
                                         logits.detach().cpu().numpy(), \
                                         values.detach().cpu().numpy())
@@ -402,7 +402,7 @@ def eval(model, criterion, optimizer, loader, batch_size, epoch_it, shape_rec):
                 pbar.update(1)
 
     mean_loss = np.mean(np.array(loss_collect))
-    if shape_rec == 'occ':
+    if shape_rep == 'occ':
         mean_metric = np.mean(np.concatenate(metric_collect))
         mean_metric = [mean_metric]
     else:
