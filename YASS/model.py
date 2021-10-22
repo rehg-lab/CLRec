@@ -49,30 +49,9 @@ class IncrNet(nn.Module):
         self.network = args.network
         self.aug = args.aug
 
-        # whether to load model from pretrained model
-        self.file_path = args.file_path
-        # Whether to use fixed (loaded from pretrained model) exemplar set
-        self.fixed_ex = args.fixed_ex
-        # Whether to use a pretrained model from the same task
-        self.ptr_model = args.ptr_model
         # Network architecture
         super(IncrNet, self).__init__()
-        if len(self.file_path) == 0:
-            self.model = models.resnet34(pretrained=self.pretrained)
-        else:
-            model_path = "%s-model.pth.tar" %os.path.splitext(self.file_path)[0]
-            classes_path = "%s-classes.npz" %os.path.splitext(self.file_path)[0]
-            print('Loading pretrained model from: ', self.file_path)
-            mdl = torch.load(model_path, map_location=lambda storage, loc: storage)
-            self.model = mdl.model
-            if self.fixed_ex:
-                self.exemplar_sets_full = mdl.exemplar_sets
-                self.exemplar_bbs_full = mdl.exemplar_bbs
-                self.eset_le_maps_full = mdl.eset_le_maps
-                self.ex_class_id_map = {cl: idx for (cl, idx) in zip(np.load(classes_path)['classes_seen'], np.load(classes_path)['model_classes_seen'])}
-                # Train a new model with random weights
-                if not self.ptr_model:
-                    self.model = models.resnet34(pretrained=self.pretrained)
+        self.model = models.resnet34(pretrained=self.pretrained)
 
         if not self.pretrained:
             self.model.apply(kaiming_normal_init)
@@ -503,8 +482,10 @@ class IncrNet(nn.Module):
             for i, (indices, images, labels, weights) in enumerate(loader):
                 epoch = i//num_batches_per_epoch
 
-                if ((epoch+1) in self.lower_rate_epoch 
+                if ((epoch+1) % self.llr_freq == 0 
                         and i % num_batches_per_epoch == 0):
+                    tqdm.write('Lowering Learning rate at epoch %d' %
+                               (epoch+1))
                     lr = lr * 1.0/self.lr_dec_factor
                     for param_group in optimizer.param_groups:
                         param_group['lr'] = lr
@@ -553,11 +534,12 @@ class IncrNet(nn.Module):
                 loss.backward()
                 optimizer.step()
 
-                tqdm.write('Epoch [%d/%d], Minibatch [%d/%d] Loss: %.4f' 
-                           % (epoch, self.num_epoch, 
-                              i % num_batches_per_epoch+1, 
-                              num_batches_per_epoch, loss.data))
                 pbar.update(1)
+
+            tqdm.write('Epoch [%d/%d], Minibatch [%d/%d] Loss: %.4f' 
+                       % (epoch, self.num_epoch, 
+                          i % num_batches_per_epoch+1, 
+                          num_batches_per_epoch, loss.data))
 
 
     def update_representation_e2e(self, dataset, prev_model, 
@@ -606,7 +588,7 @@ class IncrNet(nn.Module):
                 .cuda(device=self.device)
         
         with tqdm(total=num_batches_per_epoch*num_epoch) as pbar:
-            for i, (indices, images, labels) in enumerate(loader):
+            for i, (indices, images, labels, _) in enumerate(loader):
                 epoch = i//num_batches_per_epoch
                 if ((epoch+1) % self.llr_freq == 0 
                         and i % num_batches_per_epoch == 0):
@@ -674,8 +656,9 @@ class IncrNet(nn.Module):
                 loss.backward()
 
                 optimizer.step()
-                tqdm.write('Epoch [%d/%d], Minibatch [%d/%d] Loss: %.4f'
-                           % ((epoch+1), num_epoch, i % num_batches_per_epoch+1, 
-                              num_batches_per_epoch, loss.data))
-
                 pbar.update(1)
+
+            tqdm.write('Epoch [%d/%d], Minibatch [%d/%d] Loss: %.4f'
+                       % ((epoch+1), num_epoch, i % num_batches_per_epoch+1, 
+                          num_batches_per_epoch, loss.data))
+

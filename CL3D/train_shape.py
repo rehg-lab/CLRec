@@ -308,10 +308,10 @@ def main():
                         batch_size, epoch_it, shape_rep)
                     print('Mean loss on val set: %.4f'%(mean_loss_val))
                     if shape_rep == 'occ':
-                        metric_val_matrr[current_counter, s] = mean_metric_val[0]
+                        metric_val_matrr[cl_count, s] = mean_metric_val[0]
                         print('Mean IoU on val set: %.4f'%(mean_metric_val[0]))
                     elif shape_rep == 'sdf':
-                        metric_val_matrr[current_counter, s] = mean_metric_val[2]
+                        metric_val_matrr[cl_count, s] = mean_metric_val[2]
                         print('Mean IoU on val set: %.4f'%(mean_metric_val[2]))
                         print('Mean accuracy on val set: %.4f'%(mean_metric_val[1]))
 
