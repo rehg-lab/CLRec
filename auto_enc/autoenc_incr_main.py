@@ -16,9 +16,10 @@ import os
 import torch.multiprocessing as mp
 import atexit
 import sys
-from autoencoder import SegNet
+from autoencoder import ConvAutoencoder
 from utils.loader_utils import CustomRandomSampler
 from utils.loader_utils import CustomBatchSampler
+from utils import metric 
 
 from dataset_incr_cifar_autoenc import iCIFAR10, iCIFAR100
 from PIL import Image
@@ -80,6 +81,8 @@ parser.add_argument("--num_workers", default=8, type=int,
                          "stage of execution")
 parser.add_argument("--one_gpu", dest="one_gpu", action="store_true",
                     help="Option to run multiprocessing on 1 GPU")
+parser.add_argument("--clb", dest="clb", action="store_true",
+                    help="Option to run multiprocessing on 1 GPU")
 
 
 parser.set_defaults(ncm=False)
@@ -87,6 +90,8 @@ parser.set_defaults(d_order=False)
 parser.set_defaults(save_all=False)
 parser.set_defaults(resume=False)
 parser.set_defaults(one_gpu=False)
+parser.set_defaults(clb=False)
+
 
 # Print help if no arguments passed
 if len(sys.argv)==1:
@@ -135,7 +140,8 @@ if not os.path.exists("data_generator/cifar_mean_image.npy"):
 else:
     mean_image = np.load("data_generator/cifar_mean_image.npy")
 
-model = SegNet()
+model = ConvAutoencoder()
+
 
 # Randomly choose a subset of classes
 perm_id = np.arange(total_classes)
@@ -166,18 +172,19 @@ if args.num_iters > args.total_classes:
 
 perm_id = perm_id.reshape(-1, num_classes)
 
-train_set = iCIFAR100(args, root="../YASS/data",
+train_set = iCIFAR100(args, root="data",
                              train=True,
                              classes=perm_id,
                              download=True,
                              transform=None,
                              mean_image=mean_image)
-test_set = iCIFAR100(args, root="../YASS/data",
+test_set = iCIFAR100(args, root="data",
                              train=False,
                              classes=perm_id,
                              download=True,
                              transform=None,
-                             mean_image=mean_image)
+                             mean_image=mean_image,
+                             clb=args.clb)
 
 acc_matr = np.zeros((int(total_classes/num_classes), num_iters))
 coverage = np.zeros((int(total_classes/num_classes), num_iters))
@@ -401,10 +408,11 @@ def test_run(device):
 
             # test set only needs to be expanded
             # when a new exposure is seen
-            for expanded_class in expanded_classes_copy:
-                if expanded_class is not None:
-                    print("[Test Process] Loading test data")
-                    test_set.expand(expanded_class[0], expanded_class[1])
+            if not args.clb:
+                for expanded_class in expanded_classes_copy:
+                    if expanded_class is not None:
+                        print("[Test Process] Loading test data")
+                        test_set.expand(expanded_class[0], expanded_class[1])
 
 
             print("[Test Process] Test Set Length:", len(test_set))
@@ -422,42 +430,37 @@ def test_run(device):
             print("[Test Process] Computing Accuracy matrix...")
             all_labels = []
             all_loss = []
+            all_metric = []
             with torch.no_grad():
                 for indices, images, labels in test_loader:
                     images = Variable(images).cuda(device=device)
                     pred_imgs = test_model(images)
 
-                    ########### save test img
-                    # if np.random.rand() < 1:
-                    #     print_img = pred_imgs[0].cpu().numpy()*255.
-
-                    #     print_img = print_img.transpose(1,2,0)
-                    #     # print(print_img)
-                    #     # import pdb; pdb.set_trace()
-                    #     print_img = Image.fromarray(np.uint8(print_img))
-
-                    #     print_img.save('test.png')
-
-                    #     print_img = images[0].cpu().numpy()*255.
-
-                    #     print_img = print_img.transpose(1,2,0)
-                    #     # print(print_img)
-
-                    #     print_img = Image.fromarray(np.uint8(print_img))
-                    #     print_img.save('source.png')
-
                     loss = criterion(pred_imgs, images)
+                    ssim = metric.calc_ssim(images.cpu().numpy(), pred_imgs.cpu().numpy())
+                    all_metric.append(ssim)
                     all_loss.append(loss.cpu().numpy())
                     all_labels.append(labels.numpy())
             all_loss = np.concatenate(all_loss, axis=0)
+            all_metric = np.concatenate(all_metric, axis=0)
             all_labels = np.concatenate(all_labels, axis=0)
 
-            for i in range(test_model.n_known):
-                class_losses = all_loss[all_labels == i]
-                
-                acc_matr[i, s] = np.mean(class_losses)
+            if not args.clb:
+                test_num = test_model.n_known
+            else:
+                test_num = args.total_classes
+
+            for i in range(test_num):
+                class_metric = all_metric[all_labels == i]
+                try:
+                    acc_matr[i, s] = np.mean(class_metric)
+                except:
+                    acc_matr = np.mean(class_metric)
             print(acc_matr)
-            test_loss = np.mean(acc_matr[:test_model.n_known, s])
+            try:
+                test_loss = np.mean(acc_matr[:test_model.n_known, s])
+            except:
+                test_loss = acc_matr
             print("[Test Process] =======> Test Accuracy after %d"
                   " learning exposures : " %
                   (s + args.test_freq), test_loss)
@@ -506,3 +509,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
