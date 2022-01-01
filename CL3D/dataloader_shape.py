@@ -30,6 +30,8 @@ class Dataset(Dataset):
 
 
         self.src_pt_path = self.config.path['src_pt_path']
+        self.src_ptcl_path = self.config.path['src_ptcl_path']
+
         self.data_split_json_path = self.config.path['data_split_json_path']
 
         self.shape_rep = shape_rep
@@ -69,7 +71,7 @@ class Dataset(Dataset):
                         for (obj, cat) in self.obj_cat_map \
                         if os.path.exists(os.path.join(self.src_dataset_path, cat, obj))]
         # Get all pointcloud paths
-        self.pointcld_split_paths = [os.path.join(self.src_pt_path, cat, obj) \
+        self.pointcld_split_paths = [os.path.join(self.src_ptcl_path, cat, obj) \
                             for (obj, cat) in self.obj_cat_map \
                             if os.path.exists(os.path.join(self.src_dataset_path, cat, obj))]
         # Get all metadata paths                        

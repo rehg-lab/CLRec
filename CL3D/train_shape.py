@@ -11,8 +11,10 @@ import config_shape as config
 from datetime import datetime
 import utils_shape as utils
 from dataloader_shape import Dataset
+from dataloader_ptcl import Dataset as Dataset_Ptc
 
 from model_shape import SDFNet
+from model_pointcloud import PointCloudNet
 from tqdm import tqdm
 import copy
 
@@ -55,13 +57,23 @@ def main():
     # Num class per exposure
     nclass = config.training['nclass']
 
+    # Whether to use pointclouds as input
+    pointcloud = config.training['pointcloud']
+
     # Dataset
     print('Loading data...')
-    train_dataset = Dataset(config, num_points=num_points, mode='train', \
-        shape_rep=shape_rep, coord_system=coord_system)
-    eval_train_dataset = Dataset(config, mode='val', shape_rep=shape_rep, \
-        coord_system=coord_system)
-    val_dataset = Dataset(config, mode='val', shape_rep=shape_rep, coord_system=coord_system)
+    if not pointcloud:
+        train_dataset = Dataset(config, num_points=num_points, mode='train', \
+            shape_rep=shape_rep, coord_system=coord_system)
+        eval_train_dataset = Dataset(config, mode='val', shape_rep=shape_rep, \
+            coord_system=coord_system)
+        val_dataset = Dataset(config, mode='val', shape_rep=shape_rep, coord_system=coord_system)
+    else:
+        train_dataset = Dataset_Ptc(config, num_points=num_points, mode='train', \
+            shape_rep=shape_rep, coord_system=coord_system)
+        eval_train_dataset = Dataset_Ptc(config, mode='val', shape_rep=shape_rep, \
+            coord_system=coord_system)
+        val_dataset = Dataset_Ptc(config, mode='val', shape_rep=shape_rep, coord_system=coord_system)
 
     train_loader = torch.utils.data.DataLoader(
         train_dataset, batch_size=batch_size, num_workers=12, shuffle=True, pin_memory=True)
@@ -101,8 +113,12 @@ def main():
 
     # Model
     print('Initializing network...')
-    model = SDFNet(config)
-    model_eval = SDFNet(config)
+    if not pointcloud:
+        model = SDFNet(config)
+        model_eval = SDFNet(config)
+    else:
+        model = PointCloudNet(config)
+        model_eval = PointCloudNet(config)
 
     # Initialize training
     optimizer = optim.Adam(model.parameters(), lr=1e-4)
