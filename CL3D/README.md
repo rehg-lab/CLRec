@@ -39,7 +39,7 @@ The following are links to download pretrained C-SDFNet and C-OccNet models
 ### Testing C-SDFNet
 ```bash
 python eval_shape.py
-python plot_script.py
+python plot_script_shape.py
 ```
 
 ### Evaluating Proxy Task
