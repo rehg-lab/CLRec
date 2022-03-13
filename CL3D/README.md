@@ -30,13 +30,13 @@ python train_shape.py
 ```
 ### Pre-trained models
 The following are links to download pretrained C-SDFNet and C-OccNet models
-1. [C-SDFNet VC Single Exposure ShapeNetCore.v2](https://www.dropbox.com/sh/tnx34ony9y4wwsi/AABSkTG4lbtfzmLGDf6QHpOWa)
-2. [C-OccNet VC Single Exposure ShapeNetCore.v2](https://www.dropbox.com/sh/3jszdblnxtiit6z/AADZIvfPuTcl-wA7O1WU0UITa)
-3. [C-SDFNet VC Repeated Exposures ShapeNet13](https://www.dropbox.com/sh/ozdl057aiyka926/AADXpbgLBsO9Yfzw9TGOkYMYa)
-4. [C-OccNet VC Repeated Exposures ShapeNet13](https://www.dropbox.com/sh/eb2b0yhuq3tovqh/AABxF1A2bOgeMhpsKzYY5eUza)
-5. [C-SDFNet OC Repeated Exposures ShapeNet13](https://www.dropbox.com/sh/j9y8r4y6aszhb2j/AADNl6Qagd1NZ1VHIJ81hv8ea)
+1. [SDFNet VC with 2.5D inputs Single Exposure ShapeNetCore.v2](https://www.dropbox.com/sh/tnx34ony9y4wwsi/AABSkTG4lbtfzmLGDf6QHpOWa)
+2. [OccNet VC with 2.5D inputs Single Exposure ShapeNetCore.v2](https://www.dropbox.com/sh/3jszdblnxtiit6z/AADZIvfPuTcl-wA7O1WU0UITa)
+3. [SDFNet VC with 2.5D inputs Repeated Exposures ShapeNet13](https://www.dropbox.com/sh/ozdl057aiyka926/AADXpbgLBsO9Yfzw9TGOkYMYa)
+4. [OccNet VC with 2.5D inputs Repeated Exposures ShapeNet13](https://www.dropbox.com/sh/eb2b0yhuq3tovqh/AABxF1A2bOgeMhpsKzYY5eUza)
+5. [SDFNet OC with 2.5D inputs Repeated Exposures ShapeNet13](https://www.dropbox.com/sh/j9y8r4y6aszhb2j/AADNl6Qagd1NZ1VHIJ81hv8ea)
 
-### Testing C-SDFNet
+### Testing SDFNet
 ```bash
 python eval_shape.py
 python plot_script_shape.py
