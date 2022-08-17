@@ -15,6 +15,7 @@ from dataloader_ptcl import Dataset as Dataset_Ptc
 
 from model_shape import SDFNet
 from model_pointcloud import PointCloudNet
+from model_convoccnet import ConvSDFNet
 from tqdm import tqdm
 import copy
 
@@ -59,6 +60,11 @@ def main():
 
     # Whether to use pointclouds as input
     pointcloud = config.training['pointcloud']
+
+    # Get model
+    model_type = config.training['model']
+    if model_type == None:
+        model_type = 'SDFNet' #default to be SDFNet
 
     # Dataset
     print('Loading data...')
@@ -113,12 +119,17 @@ def main():
 
     # Model
     print('Initializing network...')
-    if not pointcloud:
+    if model_type == "SDFNet":
         model = SDFNet(config)
         model_eval = SDFNet(config)
-    else:
+    elif model_type == "PointCloudNet":
         model = PointCloudNet(config)
         model_eval = PointCloudNet(config)
+    elif model_type == "ConvSDFNet":
+        model = ConvOccNet(config)
+        model_eval = ConvOccNet(config)
+    else:
+        raise Exception("Model type not supported")
 
     # Initialize training
     optimizer = optim.Adam(model.parameters(), lr=1e-4)

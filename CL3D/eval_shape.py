@@ -5,8 +5,11 @@ import trimesh
 from tqdm import tqdm
 import config_shape as config
 from dataloader_shape import Dataset
+from dataloader_ptcl import Dataset as Dataset_Ptc
 
 from model_shape import SDFNet
+from model_pointcloud import PointCloudNet
+from model_convoccnet import ConvSDFNet
 from torch.autograd import Variable
 import torch.optim as optim
 import utils_shape as utils
@@ -31,10 +34,21 @@ def main():
 
     nclass = config.training['nclass']
 
+    # Whether to use pointclouds as input
+    pointcloud = config.training['pointcloud']
+
+    # Get model
+    model_type = config.training['model']
+    if model_type == None:
+        model_type = 'SDFNet' #default to be SDFNet
+
     # Dataset
     print('Loading data...')
-    test_dataset = Dataset(config, mode='test', shape_rep=shape_rep, \
-        coord_system=coord_system)
+    if not pointcloud:
+        test_dataset = Dataset(config, mode='test', shape_rep=shape_rep, \
+            coord_system=coord_system)
+    else:
+        test_dataset = Dataset_Ptc(config, mode='test', shape_rep=shape_rep, coord_system=coord_system)
 
     test_loader = torch.utils.data.DataLoader(
         test_dataset, batch_size=batch_size_test, num_workers=12,pin_memory=True)
@@ -61,7 +75,14 @@ def main():
            print('Current counter is not an integer')
 
     # Loading model
-    model = SDFNet(config)
+    if model_type == "SDFNet":
+        model = SDFNet(config)
+    elif model_type == "PointCloudNet":
+        model = PointCloudNet(config)
+    elif model_type == "ConvSDFNet":
+        model = ConvOccNet(config)
+    else:
+        raise Exception("Model type not supported")
     model = torch.nn.DataParallel(model).cuda()
     optimizer = optim.Adam(model.parameters(), lr=1e-4)
 

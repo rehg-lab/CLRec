@@ -16,7 +16,7 @@ data_setting = dict(
 		categories = None
 		)
 training = dict(
-		out_dir = '/data/devlearning/model_output_incr/test_release',
+		out_dir = '/data/DevLearning/model_output_incr/test_release',
 		batch_size = 64,
 		batch_size_eval = 16,
 		num_epochs = 500,
