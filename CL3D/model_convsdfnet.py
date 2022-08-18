@@ -540,9 +540,9 @@ class LocalDecoder(nn.Module):
 
 class ConvSDFNet(SDFNet):
 
-    def __init__(self, config, model=None, input_point_dim=3, latent_dim=512, size_hidden=512, pretrained=False):
+    def __init__(self, config, input_point_dim=3, latent_dim=512, size_hidden=512, pretrained=False):
         
-        super().__init__(config, model, input_point_dim, latent_dim, size_hidden, pretrained)
+        super().__init__(config, input_point_dim, latent_dim, size_hidden, pretrained)
         self.encoder = LocalPoolPointnet(c_dim=latent_dim, hidden_dim=size_hidden)
         self.decoder = LocalDecoder(c_dim=latent_dim, hidden_size=size_hidden)
 

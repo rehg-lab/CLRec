@@ -11,7 +11,6 @@ from mesh_gen_utils.libkdtree import KDTree
 from torch.autograd import Variable
 import h5py
 import torch.nn as nn
-import struct
 from PIL import Image
 
 
@@ -345,43 +344,7 @@ def distance_p2p(points_src, normals_src, points_tgt, normals_tgt):
         normals_dot_product = np.array(
             [np.nan] * points_src.shape[0], dtype=np.float32)
     return dist, normals_dot_product
-
-def generate_mesh_sdf(img, model, obj_path, sdf_path, iso=0.003, box_size=1.01, resolution=64):
-    # create cube
-    min_box = -box_size/2
-    max_box = box_size/2
-    x_ = np.linspace(min_box, max_box, resolution+1)
-    y_ = np.linspace(min_box, max_box, resolution+1)
-    z_ = np.linspace(min_box, max_box, resolution+1)
-
-    z, y, x = np.meshgrid(z_, y_, x_, indexing='ij')
-    x = np.expand_dims(x, 3)
-    y = np.expand_dims(y, 3)
-    z = np.expand_dims(z, 3)
-    all_pts = np.concatenate((x, y, z), axis=3).astype(np.float32)
-    all_pts = all_pts.reshape(1, -1, 3)
-
-    all_pts = Variable(torch.FloatTensor(all_pts)).cuda()
-
-    pred_sdf = model(all_pts, img)
-    pred_sdf = pred_sdf.data.cpu().numpy().reshape(-1)
-    f_sdf_bin = open(sdf_path, 'wb')
-    f_sdf_bin.write(struct.pack('i', -(resolution)))  # write an int
-    f_sdf_bin.write(struct.pack('i', (resolution)))  # write an int
-    f_sdf_bin.write(struct.pack('i', (resolution)))  # write an int
-
-    pos = np.array([min_box, min_box, min_box, max_box, max_box, max_box])
-
-    positions = struct.pack('d' * len(pos), *pos)
-    f_sdf_bin.write(positions)
-    val = struct.pack('=%sf'%pred_sdf.shape[0], *(pred_sdf))
-    f_sdf_bin.write(val)
-    f_sdf_bin.close()
-
-    marching_cube_cmd = "./isosurface/computeMarchingCubes" + " " + sdf_path + " " + \
-                    obj_path + " -i " + str(iso)
-    os.system(marching_cube_cmd) 
-
+    
 
 def generate_mesh_mise_sdf(img, points, model, threshold=0.003, box_size=1.7, \
             resolution=64, upsampling_steps=2):

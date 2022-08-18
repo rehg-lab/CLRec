@@ -126,8 +126,8 @@ def main():
         model = PointCloudNet(config)
         model_eval = PointCloudNet(config)
     elif model_type == "ConvSDFNet":
-        model = ConvOccNet(config)
-        model_eval = ConvOccNet(config)
+        model = ConvSDFNet(config)
+        model_eval = ConvSDFNet(config)
     else:
         raise Exception("Model type not supported")
 

@@ -9,7 +9,7 @@ from dataloader_ptcl import Dataset as Dataset_Ptc
 
 from model_shape import SDFNet
 from model_pointcloud import PointCloudNet
-from model_convoccnet import ConvSDFNet
+from model_convsdfnet import ConvSDFNet
 from torch.autograd import Variable
 import torch.optim as optim
 import utils_shape as utils
@@ -80,7 +80,7 @@ def main():
     elif model_type == "PointCloudNet":
         model = PointCloudNet(config)
     elif model_type == "ConvSDFNet":
-        model = ConvOccNet(config)
+        model = ConvSDFNet(config)
     else:
         raise Exception("Model type not supported")
     model = torch.nn.DataParallel(model).cuda()
