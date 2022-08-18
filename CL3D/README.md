@@ -12,7 +12,6 @@ Compile OccNet extension modules in `mesh_gen_utils`
 python setup.py build_ext --inplace
 ```
 To generate ground truths, follow [SDFNet](https://github.com/rehg-lab/3DShapeGen/tree/master/SDFNet)
-```
 
 ### Data
 1. [ShapeNetCore.v2 SDF + Point Clouds](https://www.dropbox.com/s/75lxxtmxkdr1be9/ShapeNet55_sdf.tar)
