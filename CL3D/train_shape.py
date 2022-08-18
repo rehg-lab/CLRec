@@ -15,13 +15,13 @@ from dataloader_ptcl import Dataset as Dataset_Ptc
 
 from model_shape import SDFNet
 from model_pointcloud import PointCloudNet
-from model_convoccnet import ConvSDFNet
+from model_convsdfnet import ConvSDFNet
 from tqdm import tqdm
 import copy
 
 def main():
     torch.backends.cudnn.benchmark = True
-
+    
     # log params
     log_dir = config.logging['log_dir']
     exp_name = config.logging['exp_name']
