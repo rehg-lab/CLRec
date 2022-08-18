@@ -33,6 +33,8 @@ The following are links to download pretrained C-SDFNet and C-OccNet models
 3. [SDFNet VC with 2.5D inputs Repeated Exposures ShapeNet13](https://www.dropbox.com/sh/ozdl057aiyka926/AADXpbgLBsO9Yfzw9TGOkYMYa)
 4. [OccNet VC with 2.5D inputs Repeated Exposures ShapeNet13](https://www.dropbox.com/sh/eb2b0yhuq3tovqh/AABxF1A2bOgeMhpsKzYY5eUza)
 5. [SDFNet OC with 2.5D inputs Repeated Exposures ShapeNet13](https://www.dropbox.com/sh/j9y8r4y6aszhb2j/AADNl6Qagd1NZ1VHIJ81hv8ea)
+6. [SDFNet VC with 3D inputs Single Exposure ShapeNetCore.v2](https://www.dropbox.com/sh/wr2fctu6ldwtus8/AADZCv8ulGSHS39-6EUrybc6a?dl=0)
+7. [ConvSDFNet VC with 3D inputs Single Exposure ShapeNetCore.v2](https://www.dropbox.com/sh/vmas6ja18slyap3/AABoC1ZcteY2m4VgPdAyq0xDa?dl=0)
 
 ### Testing SDFNet
 ```bash
