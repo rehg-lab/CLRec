@@ -5,6 +5,7 @@ Create environment using [anaconda](https://docs.conda.io/projects/conda/en/late
 ```bash
 conda env create -f ../environment.yml
 ```
+Note that this code runs with PyTorch 1.12.1 and CUDA 10.2. Please follow the instructions [here](https://pytorch.org/get-started/locally/) to install other PyTorch and CUDA versions. `torch-scatter` might need to be reinstalled to match with the CUDA version. Please follow the instructions [here](https://pytorch-geometric.readthedocs.io/en/latest/notes/installation.html) to install `torch-scatter`.
 Compile OccNet extension modules in `mesh_gen_utils`
 ```bash
 python setup.py build_ext --inplace
