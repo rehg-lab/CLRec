@@ -12,7 +12,6 @@ from torch.autograd import Variable
 import h5py
 import torch.nn as nn
 import struct
-import pymesh
 from PIL import Image
 
 
