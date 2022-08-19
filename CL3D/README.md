@@ -5,15 +5,13 @@ Create environment using [anaconda](https://docs.conda.io/projects/conda/en/late
 ```bash
 conda env create -f ../environment.yml
 ```
+Note that this code runs with PyTorch 1.12.1 and CUDA 10.2. Please follow the instructions [here](https://pytorch.org/get-started/locally/) to install other PyTorch and CUDA versions. `torch-scatter` might need to be reinstalled to match with the CUDA version. Please follow the instructions [here](https://pytorch-geometric.readthedocs.io/en/latest/notes/installation.html) to install `torch-scatter`.
+
 Compile OccNet extension modules in `mesh_gen_utils`
 ```bash
 python setup.py build_ext --inplace
 ```
-To generate ground truths and perform testing, change the path in `isosurface/LIB_PATH` to your miniconda/anaconda libraries, for example
-```bash
-export LD_LIBRARY_PATH="<path_to_anaconda>/lib:<path_to_anaconda>/envs/sdf_net/lib:./isosurface:$LD_LIBRARY_PATH" 
-source isosurface/LIB_PATH
-```
+To generate ground truths, follow [SDFNet](https://github.com/rehg-lab/3DShapeGen/tree/master/SDFNet)
 
 ### Data
 1. [ShapeNetCore.v2 SDF + Point Clouds](https://www.dropbox.com/s/75lxxtmxkdr1be9/ShapeNet55_sdf.tar)
@@ -35,6 +33,8 @@ The following are links to download pretrained C-SDFNet and C-OccNet models
 3. [SDFNet VC with 2.5D inputs Repeated Exposures ShapeNet13](https://www.dropbox.com/sh/ozdl057aiyka926/AADXpbgLBsO9Yfzw9TGOkYMYa)
 4. [OccNet VC with 2.5D inputs Repeated Exposures ShapeNet13](https://www.dropbox.com/sh/eb2b0yhuq3tovqh/AABxF1A2bOgeMhpsKzYY5eUza)
 5. [SDFNet OC with 2.5D inputs Repeated Exposures ShapeNet13](https://www.dropbox.com/sh/j9y8r4y6aszhb2j/AADNl6Qagd1NZ1VHIJ81hv8ea)
+6. [SDFNet VC with 3D inputs Single Exposure ShapeNetCore.v2](https://www.dropbox.com/sh/wr2fctu6ldwtus8/AADZCv8ulGSHS39-6EUrybc6a?dl=0)
+7. [ConvSDFNet VC with 3D inputs Single Exposure ShapeNetCore.v2](https://www.dropbox.com/sh/vmas6ja18slyap3/AABoC1ZcteY2m4VgPdAyq0xDa?dl=0)
 
 ### Testing SDFNet
 ```bash
