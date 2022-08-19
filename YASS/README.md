@@ -1,13 +1,13 @@
 The instructions in this README follow [Incremental Object Learning from Contiguous Views](https://github.com/iolfcv/experiments/blob/master/README.md)
 
 ### Environment Setup
-If the environment `sdf_net` is not created already, create environment using [anaconda](https://docs.conda.io/projects/conda/en/latest/user-guide/install/)
+If the environment `clpy38` is not created already, create environment using [anaconda](https://docs.conda.io/projects/conda/en/latest/user-guide/install/)
 ```bash
 conda env create -f ../environment.yml
 ```
 Otherwise, run the following line to activate the environment
 ```bash
-conda activate sdf_net
+conda activate clpy38
 ```
 
 ### Running Incremental Learning Models
