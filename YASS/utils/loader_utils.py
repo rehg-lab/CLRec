@@ -1,4 +1,5 @@
-from torch._six import int_classes as _int_classes
+# from torch._six import int_classes as _int_classes
+_int_classes = int
 import torch
 from torch.utils.data.sampler import Sampler
 from multiprocessing.dummy import Pool as ThreadPool
