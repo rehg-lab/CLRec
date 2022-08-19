@@ -5,10 +5,13 @@ In this work we investigate continual learning of reconstruction tasks which sur
 This repository consists of the code for reproducing CL of 3D shape reconstruction, proxy task and autoencoder results.
 
 ## Training and evaluating Single Object 3D Shape Reconstruction and proxy task
-Follow instructions in [CL3D README](https://github.com/ngailapdi/CLRec/blob/master/CL3D/README.md)
+Follow instructions in [CL3D README](https://github.com/rehg-lab/CLRec/tree/master/CL3D#readme)
 
 ## Training and evaluating autoencoder
-Follow instructions in [Autoencoder README](https://github.com/ngailapdi/CLRec/blob/master/auto_enc/README.md)
+Follow instructions in [Autoencoder README](https://github.com/rehg-lab/CLRec/blob/master/auto_enc/README.md)
+
+## Training and evaluating YASS
+Follow instructions in [YASS README](https://github.com/rehg-lab/CLRec/blob/master/YASS/README.md)
 
 ## Citing
 ```bibtex
