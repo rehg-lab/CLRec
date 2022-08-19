@@ -15,6 +15,7 @@ To generate ground truths, follow [SDFNet](https://github.com/rehg-lab/3DShapeGe
 
 ### Data
 1. [ShapeNetCore.v2 SDF + Point Clouds](https://www.dropbox.com/s/75lxxtmxkdr1be9/ShapeNet55_sdf.tar)
+1. [Training and Validation Point Clouds](https://www.dropbox.com/s/g20usd7lo7jn3go/ShapeNet_ptcl_55.tar)
 1. [3-DOF viewpoint LRBg ShapeNetCore.v2 renders](https://www.dropbox.com/s/yw03ohg04834vvv/ShapeNet55_3DOF-VC_LRBg.tar)
 1. [Train/Val json on 13 classes of ShapeNetCore.v2](https://www.dropbox.com/s/7shqu6krvs9x1ib/data_split.json)
 1. [Test json on 13 classes, 100 objects per class of ShapeNetCore.v2](https://www.dropbox.com/s/7ig5n662gv0uq6k/sample.json)
