@@ -13,6 +13,9 @@ Follow instructions in [Autoencoder README](https://github.com/rehg-lab/CLRec/bl
 ## Training and evaluating YASS
 Follow instructions in [YASS README](https://github.com/rehg-lab/CLRec/blob/master/YASS/README.md)
 
+## Dynamic Representation Tracking
+Follow instructions in [DyRT README](https://github.com/IsaacRe/dynamic-representation-tracking/blob/master/README.md)
+
 ## Citing
 ```bibtex
 @misc{thai2021surprising,
