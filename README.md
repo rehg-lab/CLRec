@@ -2,7 +2,7 @@
 
 In this work we investigate continual learning of reconstruction tasks which surprisingly do not suffer from catastrophic forgetting and exhibit positive forward knowledge transfer. In addition, we provide a novel analysis of knowledge transfer ability in CL. We further show the potential of using the feature representation learned in 3D shape reconstruction to serve as a proxy task for classification. [Link](https://arxiv.org/abs/2101.07295) to our paper and [link](https://rehg-lab.github.io/publication-pages/CLRec/) to our project webpage.
 
-This repository consists of the code for reproducing CL of 3D shape reconstruction, proxy task and autoencoder results.
+This repository consists of the code for reproducing CL of 3D shape reconstruction, proxy task and autoencoder results in the main text, and YASS and dynamic representation tracking in the appendix.
 
 ## Training and evaluating Single Object 3D Shape Reconstruction and proxy task
 Follow instructions in [CL3D README](https://github.com/rehg-lab/CLRec/tree/master/CL3D#readme)
